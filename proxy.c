@@ -18,15 +18,18 @@
 #include <syslog.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 #include "stream.h"
+#include "request.h"
+#include "log.h"
 #include "parse_utils.h"
 
 #define MAX_FDS 1023 ///// Is this okay?
 #define MAX_REQ_SIZE 8192
 #define MAX_FILENAME 128
 #define IP_STRING_MAX 25 // Extra large to avoid overflow in case of mistake
-#define MANIFEST_MAX 8000
+#define MANIFEST_MAX 80000
 #define CLIENTTYPE 0
 #define SERVERTYPE 1
 
@@ -41,8 +44,6 @@ char wwwip[IP_STRING_MAX];
 
 // The listening port and socket:
 int port, sock;
-int manifestsock; // The one we use to initially get the manifest
-char gotmanifest = 0; // 1 if we got it
 
 // The amount of data left before
 // we finish a request
@@ -59,9 +60,15 @@ char types[MAX_FDS + 1]; // client or server, see type defined above
 int server_socks[MAX_FDS + 1]; // server socket for the indexed client socket
 int client_socks[MAX_FDS + 1]; // client socket for the indexed server socket
 char ip[MAX_FDS + 1][INET_ADDRSTRLEN + 1];
+char expecting_video[MAX_FDS + 1];
 
+int manifestsock; // The one we use to initially get the manifest
+char gotmanifest = 0; // 1 if we got it
+char requestedmanifest = 0;
 char manifest[MANIFEST_MAX];
 int manifestlen = 0;
+
+char manifest_req[100];
 
 stream *ss = NULL;
 bitrate_list *brlist = NULL;
@@ -136,10 +143,12 @@ int add_client() {
   }
 
   buflens[client_sock] = 0;
+  buflens[serv_sock] = 0;
   types[client_sock] = CLIENTTYPE;
   types[serv_sock] = SERVERTYPE;
   server_socks[client_sock] = serv_sock;
   client_socks[serv_sock] = client_sock;
+  expecting_video[client_sock] = 0;
   FD_SET(client_sock, &readfds);
   FD_SET(serv_sock, &readfds);
 
@@ -197,32 +206,52 @@ int request_manifest() {
 
   manifestsock = serv_sock;
   types[manifestsock] = SERVERTYPE;
-  FD_SET(manifestsock, &readfds);
+  strcpy(bufs[manifestsock], manifest_req);
+  buflens[manifestsock] = strlen(manifest_req);
 
   freeaddrinfo(fakeinfo);
   freeaddrinfo(servinfo);
-  printf("Requested manifest!\n");
   return 0;
 }
 
+int complement_sock(int sock) {
+  if (types[sock] == CLIENTTYPE)
+    return server_socks[sock];
+  return client_socks[sock];
+}
+
 void process_request(int server) {
+  char *req = malloc(buflens[server] + 1);
+  strcpy(req, bufs[server]);
+  printf("Request: \n%s\n", req);
+  free(req);
+
   int bit_rate, seq, frag;
   if (parse_uri(bufs[server], buflens[server], &bit_rate, &seq, &frag)) {
     int rate = bitrate_list_select(brlist, ss->throughput);
-    replace_uri(bufs[server], buflens[server], rate);
+    replace_uri(bufs[server], &buflens[server], rate);
     stream_add_request(ss, request_init(rate, seq, frag));
+    expecting_video[complement_sock(server)] = 1;
+  } else {
+    expecting_video[complement_sock(server)] = 0;
   }
+  printf("Expecting video? %d!\n", expecting_video[complement_sock(server)]);
   if (parse_f4m(bufs[server], buflens[server])) {
     replace_f4m(bufs[server], buflens[server]);
   }
 }
 
 void process_data(int client) {
+  if (!expecting_video[client])
+    return;
+
+  printf("Processing chunk...\n");
   int len;
   if (parse_headers(bufs[client], buflens[client], &len)) {
     data_left = len;
     stream_request_chunksize(ss, len);
   }
+  printf("data_left = %d\n", data_left);
   if (data_left <= 0)
     return; // We're being sloppy, so we don't want to finish twice
 
@@ -231,6 +260,7 @@ void process_data(int client) {
     stream_request_complete(ss);
     stream_calc_throughput(ss, alpha);
     
+    printf("Got chunk, logging!\n");
     log_print(ss, ip[client]);
   }
 }
@@ -249,12 +279,6 @@ void remove_server(int server_sock) {
   close(client_socks[server_sock]);
 }
 
-int complement_sock(int sock) {
-  if (types[sock] == CLIENTTYPE)
-    return server_socks[sock];
-  return client_socks[sock];
-}
-
 int main(int argc, char* argv[])
 {
   signal(SIGINT, signal_handler);
@@ -270,6 +294,8 @@ int main(int argc, char* argv[])
   sscanf(argv[6], "%d", &dnsport);
   if (argc > 7)
     strcpy(wwwip, argv[7]);
+
+  sprintf(manifest_req, "GET /vod/big_buck_bunny.f4m HTTP/1.1\r\nHost: localhost:%d\r\n\r\n", listen_port);
 
   log_init(logfile);
 
@@ -310,32 +336,36 @@ int main(int argc, char* argv[])
     // Copy fd sets:
     FD_ZERO(&readfdscopy);
     FD_ZERO(&writefdscopy);
-    int i;
-    for (i = 0; i <= MAX_FDS; i++) {
-      if (i == sock) {
-	FD_SET(i, &readfdscopy);
-	continue;
-      }
-      // We'll accept connections, but we won't read or write
-      // to anything other than the manifest socket until
-      // we get the manifest:
-      if (!gotmanifest) {
-	FD_SET(manifestsock, &readfdscopy);
-	FD_SET(manifestsock, &writefdscopy);
-	continue;
-      }
 
-      // Decide if we actually want to read/write from this socket:
-      if (FD_ISSET(i, &readfds) && 
-	  buflens[complement_sock(i)] == 0) {
-	FD_SET(i, &readfdscopy);
-      }
-      if (FD_ISSET(i, &writefds) || 
-          buflens[i] > 0) { // Write if there's stuff left to write
-	FD_SET(i, &writefdscopy);
+    // We'll accept connections, but we won't read or write
+    // to anything other than the manifest socket until
+    // we get the manifest:
+    if (!requestedmanifest) {
+      FD_SET(sock, &readfdscopy);
+      FD_SET(manifestsock, &writefdscopy);
+    } else if (!gotmanifest) {
+      FD_SET(sock, &readfdscopy);
+      FD_SET(manifestsock, &readfdscopy);
+    } else {
+      int i;
+      for (i = 0; i <= MAX_FDS; i++) {
+	if (i == sock) {
+	  FD_SET(i, &readfdscopy);
+	  continue;
+	}
+	
+	// Decide if we actually want to read/write from this socket:
+	if (FD_ISSET(i, &readfds) && 
+	    buflens[complement_sock(i)] == 0) {
+	  FD_SET(i, &readfdscopy);
+	}
+	if (FD_ISSET(i, &writefds) || 
+	    buflens[i] > 0) { // Write if there's stuff left to write
+	  FD_SET(i, &writefdscopy);
+	}
       }
     }
-
+      
     int select_return = select(MAX_FDS, &readfdscopy, &writefdscopy, &exceptfds, NULL);
     if (select_return < 0) {
       printf("Select error: %d\n", errno);
@@ -353,9 +383,9 @@ int main(int argc, char* argv[])
       if (i == sock)
 	continue;
 
-      if (i == manifestsock) {
-	int bytes_read = recv(i, manifest + manifestlen, 
-			      MANIFEST_MAX - manifestlen, 0);
+      if (requestedmanifest && !gotmanifest && i == manifestsock) {
+	int bytes_read = recv(i, manifest, MANIFEST_MAX, 0);
+	printf("Read %d bytes from the manifest!\n", bytes_read);
 	if (bytes_read <= 0) {
 	  if (bytes_read < 0) {
 	    fprintf(stderr, "Error reading from manifest socket %d\n", i);
@@ -365,6 +395,17 @@ int main(int argc, char* argv[])
 	  ///// Is this safe?
 	  gotmanifest = 1;
 	  brlist = parse_xml(manifest, manifestlen);
+	  printf("Got manifest!\n");
+	  //printf("manifest = %s\n", manifest);
+
+	  bitrate_list *bl = brlist;
+	  printf("Bitrates:\t");
+	  while (bl != NULL) {
+	    printf("%d\t", bl->bitrate);
+	    bl = bl->next;
+	  }
+	  printf("\n\n");
+
 	  ss = stream_init(bitrate_list_select(brlist, 0.0));
 	}
       }
@@ -402,8 +443,24 @@ int main(int argc, char* argv[])
       if (i == sock)
 	continue;
 
+      if (!requestedmanifest && i == manifestsock) {
+	int bytes_sent = send(i, bufs[i], buflens[i], 0);
+	if (bytes_sent != buflens[i]) {
+	  fprintf(stderr, "Couldn't send the manifest in one send!\n");
+	  return EXIT_FAILURE;
+	}
+	printf("Sent %d bytes of manifest request!\n", bytes_sent);
+	buflens[i] = 0;
+	requestedmanifest = 1;
+	continue;
+      }
       // Writing:
       if (FD_ISSET(i, &writefdscopy)) {
+	char *req = malloc(buflens[i] + 1);
+	strcpy(req, bufs[i]);
+	printf("About to send: \n%s\n", req);
+	free(req);
+
 	int bytes_sent = send(i, bufs[i], buflens[i], 0);
 	if (bytes_sent <= 0) {
 	  if (bytes_sent < 0) {
