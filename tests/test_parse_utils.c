@@ -52,7 +52,7 @@ int main() {
 
   /** URI tests **/
   char *uri_fail = "GET something ELSE";
-  char uri_work[28+25] = "GET /vod/200Seq1-Frag3 ELSE";
+  char uri_work[28+25] = "GET /vod/200Seg1-Frag3 ELSE";
   int bitrate, seq, frag;
 
   printf("parse_uri: fail\n");
