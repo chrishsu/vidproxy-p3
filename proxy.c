@@ -1,10 +1,7 @@
 /**
- * @file lisod.c
- * @author David Wise <dwise@andrew.cmu.edu>
+ * @file proxy.c
  * @section Description
- * A simple server that supports multiple clients concurrently.
- * Based on the starting file echo_server.c and the given file
- * cgi_example.c.
+ * The proxy file
  */
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -22,10 +19,14 @@
 #include <sys/types.h>
 #include <netdb.h>
 
-#define MAX_FDS 1023
+#include "stream.h"
+#include "parse_utils.h"
+
+#define MAX_FDS 1023 ///// Is this okay?
 #define MAX_REQ_SIZE 8192
 #define MAX_FILENAME 128
 #define IP_STRING_MAX 25 // Extra large to avoid overflow in case of mistake
+#define MANIFEST_MAX 8000
 #define CLIENTTYPE 0
 #define SERVERTYPE 1
 
@@ -40,15 +41,30 @@ char wwwip[IP_STRING_MAX];
 
 // The listening port and socket:
 int port, sock;
+int manifestsock; // The one we use to initially get the manifest
+char gotmanifest = 0; // 1 if we got it
+
+// The amount of data left before
+// we finish a request
+int data_left = 0;
 
 // FD sets:
 fd_set readfds, writefds, exceptfds;
 
-char bufs[MAX_FDS + 1][2 * (MAX_REQ_SIZE + 5)];
+// Must be larger because we add a null character
+// and we make the requests slightly longer:
+char bufs[MAX_FDS + 1][MAX_REQ_SIZE + 25];
 int buflens[MAX_FDS + 1];
 char types[MAX_FDS + 1]; // client or server, see type defined above
 int server_socks[MAX_FDS + 1]; // server socket for the indexed client socket
 int client_socks[MAX_FDS + 1]; // client socket for the indexed server socket
+char ip[MAX_FDS + 1][INET_ADDRSTRLEN + 1];
+
+char manifest[MANIFEST_MAX];
+int manifestlen = 0;
+
+stream *ss = NULL;
+bitrate_list *brlist = NULL;
 
 void clean_up() {
   close(sock);
@@ -89,6 +105,7 @@ int add_client() {
   servhints.ai_socktype = SOCK_STREAM;
   if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
     fprintf(stderr, "Error getting real server address info!\n");
+    freeaddrinfo(fakeinfo);
     close(client_sock);
     return -1;
   }
@@ -97,6 +114,8 @@ int add_client() {
   int serv_sock;
   if ((serv_sock = socket(fakeinfo->ai_family, fakeinfo->ai_socktype, fakeinfo->ai_protocol)) == -1) {
     fprintf(stderr, "Error creating server socket!\n");
+    freeaddrinfo(fakeinfo);
+    freeaddrinfo(servinfo);
     close(client_sock);
     return -1;
   }
@@ -109,6 +128,8 @@ int add_client() {
   }
   if (connect(serv_sock, (struct sockaddr *)servinfo->ai_addr, servinfo->ai_addrlen)) {
     fprintf(stderr, "Error connecting to server socket!\n");
+    freeaddrinfo(fakeinfo);
+    freeaddrinfo(servinfo);
     close(client_sock);
     close(serv_sock);
     return -1;
@@ -122,8 +143,96 @@ int add_client() {
   FD_SET(client_sock, &readfds);
   FD_SET(serv_sock, &readfds);
 
+  freeaddrinfo(fakeinfo);
+  freeaddrinfo(servinfo);
+
+  if (!inet_ntop(AF_INET, &cli_addr, ip[client_sock], INET_ADDRSTRLEN)) {
+    fprintf(stderr, "Error getting IP address!\n");
+    ip[client_sock][0] = 0; // Make it empty
+  }
   printf("Added client!\n");
   return 0;
+}
+
+int request_manifest() {
+  struct addrinfo fakehints, *fakeinfo;
+  memset(&fakehints, 0, sizeof(fakehints));
+  fakehints.ai_family = AF_INET;
+  fakehints.ai_socktype = SOCK_STREAM;
+  if (getaddrinfo(fakeip, "0", &fakehints, &fakeinfo)) {
+    fprintf(stderr, "Error getting manifest fake server address info!\n");
+    return -1;
+  }
+  struct addrinfo servhints, *servinfo;
+  memset(&servhints, 0, sizeof(servhints));
+  servhints.ai_family = AF_INET;
+  servhints.ai_socktype = SOCK_STREAM;
+  if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
+    fprintf(stderr, "Error getting manifest real server address info!\n");
+    freeaddrinfo(fakeinfo);
+     return -1;
+  }
+
+  // Try the first address returned:
+  int serv_sock;
+  if ((serv_sock = socket(fakeinfo->ai_family, fakeinfo->ai_socktype, fakeinfo->ai_protocol)) == -1) {
+    fprintf(stderr, "Error creating manifest server socket!\n");
+    freeaddrinfo(fakeinfo);
+    freeaddrinfo(servinfo);
+    return -1;
+  }
+
+  if (bind(serv_sock, (struct sockaddr *)fakeinfo->ai_addr, fakeinfo->ai_addrlen)) {
+    fprintf(stderr, "Error binding manifest server socket: %d!\n", errno);
+    close(serv_sock);
+    return -1;
+  }
+  if (connect(serv_sock, (struct sockaddr *)servinfo->ai_addr, servinfo->ai_addrlen)) {
+    fprintf(stderr, "Error connecting to manifest server socket!\n");
+    freeaddrinfo(fakeinfo);
+    freeaddrinfo(servinfo);
+    close(serv_sock);
+    return -1;
+  }
+
+  manifestsock = serv_sock;
+  types[manifestsock] = SERVERTYPE;
+  FD_SET(manifestsock, &readfds);
+
+  freeaddrinfo(fakeinfo);
+  freeaddrinfo(servinfo);
+  printf("Requested manifest!\n");
+  return 0;
+}
+
+void process_request(int server) {
+  int bit_rate, seq, frag;
+  if (parse_uri(bufs[server], buflens[server], &bit_rate, &seq, &frag)) {
+    int rate = bitrate_list_select(brlist, ss->throughput);
+    replace_uri(bufs[server], buflens[server], rate);
+    stream_add_request(ss, request_init(rate, seq, frag));
+  }
+  if (parse_f4m(bufs[server], buflens[server])) {
+    replace_f4m(bufs[server], buflens[server]);
+  }
+}
+
+void process_data(int client) {
+  int len;
+  if (parse_headers(bufs[client], buflens[client], &len)) {
+    data_left = len;
+    stream_request_chunksize(ss, len);
+  }
+  if (data_left <= 0)
+    return; // We're being sloppy, so we don't want to finish twice
+
+  data_left -= buflens[client];
+  if (data_left <= 0) { // This data made us go below 0
+    stream_request_complete(ss);
+    stream_calc_throughput(ss, alpha);
+    
+    log_print(ss, ip[client]);
+  }
 }
 
 void remove_client(int client_sock) {
@@ -162,11 +271,11 @@ int main(int argc, char* argv[])
   if (argc > 7)
     strcpy(wwwip, argv[7]);
 
+  log_init(logfile);
+
   FD_ZERO(&readfds);
   FD_ZERO(&writefds);
   FD_ZERO(&exceptfds);
-
-  socklen_t cli_size;
 
   if ((sock = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
     fprintf(stderr, "Failed creating socket.\n");
@@ -191,6 +300,9 @@ int main(int argc, char* argv[])
   }
   FD_SET(sock, &readfds);
 
+  // Request the manifest from the server:
+  request_manifest();
+
   printf("Entering select loop!\n");
 
   fd_set readfdscopy, writefdscopy;
@@ -200,13 +312,26 @@ int main(int argc, char* argv[])
     FD_ZERO(&writefdscopy);
     int i;
     for (i = 0; i <= MAX_FDS; i++) {
-      // Decide if we actually want to read/write from this client:
+      if (i == sock) {
+	FD_SET(i, &readfdscopy);
+	continue;
+      }
+      // We'll accept connections, but we won't read or write
+      // to anything other than the manifest socket until
+      // we get the manifest:
+      if (!gotmanifest) {
+	FD_SET(manifestsock, &readfdscopy);
+	FD_SET(manifestsock, &writefdscopy);
+	continue;
+      }
+
+      // Decide if we actually want to read/write from this socket:
       if (FD_ISSET(i, &readfds) && 
 	  buflens[complement_sock(i)] == 0) {
 	FD_SET(i, &readfdscopy);
       }
       if (FD_ISSET(i, &writefds) || 
-	  buflens[i] > 0) { // Write if there's stuff left to write
+          buflens[i] > 0) { // Write if there's stuff left to write
 	FD_SET(i, &writefdscopy);
       }
     }
@@ -228,6 +353,22 @@ int main(int argc, char* argv[])
       if (i == sock)
 	continue;
 
+      if (i == manifestsock) {
+	int bytes_read = recv(i, manifest + manifestlen, 
+			      MANIFEST_MAX - manifestlen, 0);
+	if (bytes_read <= 0) {
+	  if (bytes_read < 0) {
+	    fprintf(stderr, "Error reading from manifest socket %d\n", i);
+	  }
+	  return EXIT_FAILURE;
+	} else { // read something
+	  ///// Is this safe?
+	  gotmanifest = 1;
+	  brlist = parse_xml(manifest, manifestlen);
+	  ss = stream_init(bitrate_list_select(brlist, 0.0));
+	}
+      }
+
       // Reading:
       if (FD_ISSET(i, &readfdscopy)) {
 	int complement_sock;
@@ -244,9 +385,15 @@ int main(int argc, char* argv[])
 	    remove_client(i);
 	  else
 	    remove_server(i);
-	} else { // read something
+	} else { // read something from i for complement_sock
 	  // If we already read other stuff then we shouldn't be here:
 	  buflens[complement_sock] = bytes_read;
+	  // Set last character to null:
+	  bufs[complement_sock][bytes_read] = 0;
+	  if (types[i] == CLIENTTYPE) // Sent from the client
+	    process_request(complement_sock); // complement is the server
+	  else
+	    process_data(complement_sock); // complement is the client
 	}
       }
     }
