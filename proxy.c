@@ -221,10 +221,11 @@ int complement_sock(int sock) {
 }
 
 void process_request(int server) {
+  /*
   char *req = malloc(buflens[server] + 1);
   strcpy(req, bufs[server]);
   printf("Request: \n%s\n", req);
-  free(req);
+  free(req);*/
 
   int bit_rate, seq, frag;
   if (parse_uri(bufs[server], buflens[server], &bit_rate, &seq, &frag)) {
@@ -235,7 +236,8 @@ void process_request(int server) {
   } else {
     expecting_video[complement_sock(server)] = 0;
   }
-  printf("Expecting video? %d!\n", expecting_video[complement_sock(server)]);
+  return;
+  //printf("Expecting video? %d!\n", expecting_video[complement_sock(server)]);
   if (parse_f4m(bufs[server], buflens[server])) {
     replace_f4m(bufs[server], buflens[server]);
   }
@@ -456,10 +458,12 @@ int main(int argc, char* argv[])
       }
       // Writing:
       if (FD_ISSET(i, &writefdscopy)) {
+	/*
 	char *req = malloc(buflens[i] + 1);
 	strcpy(req, bufs[i]);
 	printf("About to send: \n%s\n", req);
 	free(req);
+	*/
 
 	int bytes_sent = send(i, bufs[i], buflens[i], 0);
 	if (bytes_sent <= 0) {
@@ -473,6 +477,7 @@ int main(int argc, char* argv[])
 	} else { // sent something
 	  buflens[i] -= bytes_sent;
 	  memcpy(bufs[i], bufs[i] + bytes_sent, buflens[i]);
+	  bufs[i][buflens[i]] = 0;
 	}
       }
     }

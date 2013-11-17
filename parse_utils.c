@@ -203,7 +203,7 @@ int replace_f4m(char *buf, int buf_size) {
   sprintf(newbuf, "GET /vod/big_buck_bunny_nolist.f4m %s",
           buf+leftover);
 
-  memcpy(buf, newbuf, buf_size + 7);
+  memcpy(buf, newbuf, buf_size + 7 + 1);
   free(newbuf);
   return 1;
 }
