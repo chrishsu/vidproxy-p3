@@ -155,7 +155,7 @@ int add_client() {
   freeaddrinfo(fakeinfo);
   freeaddrinfo(servinfo);
 
-  if (!inet_ntop(AF_INET, &cli_addr, ip[client_sock], INET_ADDRSTRLEN)) {
+  if (!inet_ntop(AF_INET, &(servinfo->ai_addr), ip[client_sock], INET_ADDRSTRLEN)) {
     fprintf(stderr, "Error getting IP address!\n");
     ip[client_sock][0] = 0; // Make it empty
   }
@@ -247,13 +247,12 @@ void process_data(int client) {
   if (!expecting_video[client])
     return;
 
-  printf("Processing chunk...\n");
   int len;
   if (parse_headers(bufs[client], buflens[client], &len)) {
     data_left = len;
+    printf("Calling stream_request_chunksize(ss, %d);\n", len);
     stream_request_chunksize(ss, len);
   }
-  printf("data_left = %d\n", data_left);
   if (data_left <= 0)
     return; // We're being sloppy, so we don't want to finish twice
 
