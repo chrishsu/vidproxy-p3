@@ -125,7 +125,7 @@ int parse_uri(char *buf, int buf_size,
 }
 
 int bitrate_length(int num) {
-  char str[10] = 0;
+  char str[10] = {0};
   sprintf(str, "%d", num);
   return strlen(str);
 }
@@ -140,6 +140,9 @@ int bitrate_length(int num) {
  * @return 1 on success, 0 on failure.
  */
 int replace_uri(char *buf, int *buf_size, int br) {
+  if (strlen(buf) != *buf_size) {
+    printf("\n\nERROR: %d and %d!\n\n", strlen(buf), *buf_size);
+  }
   //if (buf_size < 21) return 0;
   int bitrate, leftover, seg_num, frag_num;
   bitrate = 0; leftover = 0; seg_num = 0; frag_num = 0;
@@ -149,10 +152,10 @@ int replace_uri(char *buf, int *buf_size, int br) {
     return 0;
   }
 
-  printf("Old size: %d\t", *buf_size);
-  *buf_size += bitrate_length(bitrate) - bitrate_length(br);
-  printf("New Size: %d\n", *buf_size);
-  char *newbuf = malloc(*buf_size);
+  printf("Old size: %d\tOld bitrate: %d\n", *buf_size, bitrate);
+  *buf_size += bitrate_length(br) - bitrate_length(bitrate);
+  printf("New Size: %d\t New birate: %d\n", *buf_size, br);
+  char *newbuf = malloc(*buf_size + 1);
   
   sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
           br, seg_num, frag_num, buf+leftover);
@@ -190,7 +193,7 @@ int parse_f4m(char *buf, int buf_size) {
  */
 int replace_f4m(char *buf, int buf_size) {
   //if (buf_size < 28) return 0;
-  char *newbuf = malloc(buf_size + 7);
+  char *newbuf = malloc(buf_size + 7 + 1);
   int leftover = 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",
       &leftover) < 0) {
