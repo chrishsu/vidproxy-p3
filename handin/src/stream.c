@@ -10,7 +10,7 @@
 stream *stream_init(int br) {
   stream *s = malloc(sizeof(stream));
   s->cur_bitrate = 0;
-  s->throughput = 0.0;
+  s->throughput = (float)br;
   s->cur_request = NULL;
   return s;
 }
@@ -46,7 +46,7 @@ void stream_request_chunksize(stream *s, int chunksize) {
     fprintf(stderr, "stream_request_chunksize request is NULL!\n");
     return;
   }
-  printf("Setting chunksize: %d!!!\n", chunksize);
+  // printf("Setting chunksize: %d!!!\n", chunksize);
   s->cur_request->chunksize = chunksize;
 }
 

@@ -221,15 +221,10 @@ int complement_sock(int sock) {
 }
 
 void process_request(int server) {
-  /*
-  char *req = malloc(buflens[server] + 1);
-  strcpy(req, bufs[server]);
-  printf("Request: \n%s\n", req);
-  free(req);*/
-
   int bit_rate, seq, frag;
   if (parse_uri(bufs[server], buflens[server], &bit_rate, &seq, &frag)) {
     int rate = bitrate_list_select(brlist, ss->throughput);
+    printf("Old bitrate: %d\tNew bitrate: %d\n", bit_rate, rate);
     replace_uri(bufs[server], &buflens[server], rate);
     stream_add_request(ss, request_init(rate, seq, frag));
     expecting_video[complement_sock(server)] = 1;
@@ -250,7 +245,7 @@ void process_data(int client) {
   int len;
   if (parse_headers(bufs[client], buflens[client], &len)) {
     data_left = len;
-    printf("Calling stream_request_chunksize(ss, %d);\n", len);
+    // printf("Calling stream_request_chunksize(ss, %d);\n", len);
     stream_request_chunksize(ss, len);
   }
   if (data_left <= 0)
@@ -261,7 +256,7 @@ void process_data(int client) {
     stream_request_complete(ss);
     stream_calc_throughput(ss, alpha);
     
-    printf("Got chunk, logging!\n");
+    // printf("Got chunk, logging!\n");
     log_print(ss, ip[client]);
   }
 }

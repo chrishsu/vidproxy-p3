@@ -143,15 +143,14 @@ int replace_uri(char *buf, int *buf_size, int br) {
   //if (buf_size < 21) return 0;
   int bitrate, leftover, seg_num, frag_num;
   bitrate = 0; leftover = 0; seg_num = 0; frag_num = 0;
-  printf("Replace Uri..\n");
   if (sscanf(buf, "GET /vod/%dSeg%d-Frag%d %n",
 	    &bitrate, &seg_num, &frag_num, &leftover) < 3) {
     return 0;
   }
 
-  printf("Old size: %d\tOld bitrate: %d\n", *buf_size, bitrate);
+  //printf("Old size: %d\tOld bitrate: %d\n", *buf_size, bitrate);
   *buf_size += bitrate_length(br) - bitrate_length(bitrate);
-  printf("New Size: %d\t New birate: %d\n", *buf_size, br);
+  //printf("New Size: %d\t New birate: %d\n", *buf_size, br);
   char *newbuf = malloc(*buf_size + 1);
 
   sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
