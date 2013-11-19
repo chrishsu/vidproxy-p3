@@ -12,6 +12,8 @@ typedef struct server_loop {
   struct server_loop *next;
 } server_loop;
 
+server_loop *servers;
+
 void rr_parse_servers(char *filename);
 char *rr_next_server();
 void rr_free();

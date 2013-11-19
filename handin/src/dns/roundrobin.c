@@ -1,8 +1,6 @@
 
 #include "roundrobin.h"
 
-server_loop *servers;
-
 /**
  * Parse the file for server ip's.
  *
