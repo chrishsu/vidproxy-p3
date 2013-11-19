@@ -8,10 +8,12 @@ TESTBINS = test_parse_utils
 
 # Explicit build targets
 
-all: tests ${TESTBINS}
+all: proxy tests ${TESTBINS}
+
+proxy: proxy.o
 
 clean:
-	rm -f *.o $(TESTBINS)
+	rm -f *.o proxy $(TESTBINS)
 
 # Testing
 
