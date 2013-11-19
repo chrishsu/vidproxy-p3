@@ -161,13 +161,13 @@ int add_client() {
   FD_SET(client_sock, &readfds);
   FD_SET(serv_sock, &readfds);
 
-  freeaddrinfo(fakeinfo);
-  freeaddrinfo(servinfo);
-
   if (!inet_ntop(AF_INET, &(servinfo->ai_addr), ip[client_sock], INET_ADDRSTRLEN)) {
     fprintf(stderr, "Error getting IP address!\n");
     ip[client_sock][0] = 0; // Make it empty
   }
+
+  freeaddrinfo(fakeinfo);
+  freeaddrinfo(servinfo);
   printf("Added client!\n");
   return 0;
 }
