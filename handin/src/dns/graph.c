@@ -43,8 +43,6 @@ void add_neighbor(node_list *node, node_list *neighbor) {
  */
 void newLSA(node_list **nodes, 
 	    char *senderIP, int seqnum, neighbor_list *neighbors) {
-  printf("newLSA...\n");
-
   node_list *sender = find_node(nodes, senderIP);
   if (sender->last_seqnum >= seqnum)
     return;
@@ -68,8 +66,6 @@ int index_for_ip(node_list *nodes, char *ip) {
     char copy[INET_ADDRSTRLEN + 1];
     strncpy(copy, nodes->ip, INET_ADDRSTRLEN);
     copy[INET_ADDRSTRLEN] = 0;
-    //printf("nodes->ip = %s, ip = %s\n", copy, ip);
-
     if (strncmp(nodes->ip, ip, INET_ADDRSTRLEN) == 0)
       return index;
     nodes = nodes->next;
@@ -95,12 +91,10 @@ void print_graph(node_list *graph) {
   }
   cur = graph;
   while (cur != NULL) {
-    printf("Looking at %s\n", cur->ip);
     int cur_index = index_for_ip(graph, cur->ip);
     neighbor_list *cur_neighbor = cur->neighbors;
     while (cur_neighbor != NULL) {
       int neighbor_index = index_for_ip(graph, cur_neighbor->node->ip);
-      printf("Setting adjMat[%d][%d]\n", cur_index, neighbor_index);
       adjMat[cur_index][neighbor_index] = 1;
       cur_neighbor = cur_neighbor->next;
     }
@@ -129,20 +123,15 @@ node_list *parse_file(char *LSAfile) {
 
   int seqnum;
   char neighbor_str[(INET_ADDRSTRLEN + 1) * MAXNEIGHBORS];
-  printf("Opened, going to read...\n");
   int ret_val;
   while (1) {
     ret_val = fscanf(f, "%s %d %s", sender, &seqnum, neighbor_str);
-    printf("got ret_val = %d\n", ret_val);
     if (ret_val <= 0)
       break;
-    printf("Read something!\n");
 
-    neighbor_list *neighbors = malloc(sizeof(node_list));
     neighbors->next = NULL;
     char *next = neighbor_str;
     while (1) {
-      printf("next = %s\n", next);
       char *comma = strchr(next, ',');
       if (comma == NULL) {
 	neighbors->node = find_node(&nodes, next);
@@ -180,7 +169,6 @@ node_list *parse_file(char *LSAfile) {
     }
     */
 
-    printf("newLSA!: %s, %d, neighbors\n", sender, seqnum);
     newLSA(&nodes, 
 	   sender, seqnum, neighbors);
   }
@@ -228,7 +216,6 @@ node_list *closest_server(node_list *graph, char *ip, server_loop *servers) {
     next = pop(queue);
     if (next->visited)
       continue;
-    printf("Visit %s\n", next->ip);
     next->visited = 1;
     if (is_video_server(next->ip, servers))
       break;
@@ -236,12 +223,9 @@ node_list *closest_server(node_list *graph, char *ip, server_loop *servers) {
     neighbor_list *neighbor = next->neighbors;
     while (neighbor != NULL) {
       node_list *cur = neighbor->node;
-      printf("%s is a neighbor\n", cur->ip);
       if (!cur->visited) {
-	printf("%s is unvisited...\n", cur->ip);
 	if (cur->distance < 0 || 
 	    next->distance + 1 < cur->distance) {
-	  printf("Updating %s\n", cur->ip);
 	  cur->distance = next->distance + 1;
 	  if (cur->pq_index >= 1)
 	    update(cur, queue);
