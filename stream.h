@@ -11,6 +11,7 @@ typedef struct {
 } stream;
 
 stream *stream_init();
+void stream_add_request(stream *s, request *r);
 void stream_free(stream *s);
 
 #endif

@@ -18,6 +18,7 @@ typedef struct {
 } request;
 
 request *request_init(int br, char *ip, char *name);
+void request_complete(request *r);
 void request_free(request *r);
 
 #endif
