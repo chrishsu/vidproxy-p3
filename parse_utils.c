@@ -71,9 +71,7 @@ bitrate_list *parse_xml(char *buf) {
  * @return 1 on success, 0 on failure.
  */
 int parse_uri(char *buf, int *br) {
-  printf("%s\n", buf);
   if (sscanf(buf, "GET /vod/%dSeq%*d-Frag%*d", br) < 1) {
-    printf("it got here!\n");
     return 0;
   }
   return 1;
@@ -81,6 +79,7 @@ int parse_uri(char *buf, int *br) {
 
 /**
  * Writes a new uri and request.
+ * NOTE: return string will need to be freed.
  *
  * @param[in] buf       The buffer.
  * @param[in] buf_size  The buffer size.
@@ -93,12 +92,49 @@ char *write_uri(char *buf, int buf_size, int br) {
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
   if (sscanf(buf, "GET /vod/%*dSeq%d-Frag%d %n",
-	     &seg_num, &frag_num, &leftover) < 2) {
+	    &seg_num, &frag_num, &leftover) < 2) {
     return NULL;
   }
 
   sprintf(newbuf, "GET /vod/%dSeq%d-Frag%d %s",
-	  br, seg_num, frag_num, buf+leftover);
+          br, seg_num, frag_num, buf+leftover);
+
+  return newbuf;
+}
+
+/**
+ * Checks if uri is for the f4m.
+ *
+ * @param[in] buf  The buffer.
+ *
+ * @return 1 on success, 0 on failure.
+ */
+int parse_nolist(char *buf) {
+  if (sscanf(buf, "GET /vod/big_buck_bunny.f4m") < 0) {
+    return 0;
+  }
+  return 1;
+}
+
+/**
+ * Writes a new f4m request.
+ * NOTE: return string will need to be freed.
+ *
+ * @param[in] buf       The buffer.
+ * @param[in] buf_size  The buffer size.
+ *
+ * @return The new uri string.
+ */
+char *write_f4m(char *buf, int buf_size) {
+  char *newbuf = malloc(buf_size + 7);
+  int leftover;
+  if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",
+      leftover) < 0) {
+    return 0;
+  }
+  
+  sprintf(newbuf, "GET /vod/big_buck_bunny_nolist.f4m %s",
+          buf+leftover);
 
   return newbuf;
 }
