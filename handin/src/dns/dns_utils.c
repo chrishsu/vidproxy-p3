@@ -29,8 +29,12 @@ int dns_process_query(char *b, short len, dns_question *dq) {
   memcpy(dq->qname, b, namelen);
   if (len == 0) dq->qname = NULL;
   int variance = sizeof(byte *) + sizeof(int);
-  memcpy(dq + variance, b,
-          sizeof(dns_question) - variance);
+
+  memcpy((char *)dq + variance, b + namelen,
+	 sizeof(dns_question) - variance);
+
+  //printf("b: %hhd %hhd %hhd %hhd\n", b[0], b[1], b[2], b[3]);
+  printf("Set type to %hd and class to %hd\n", dq->qtype, dq->qclass);
   return 1;
 }
 
@@ -41,9 +45,9 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
   int namelen = name_length(b, len);
   da->namelen = namelen;
   da->aname = malloc(namelen);
-  memcpy(da->aname, b, namelen);
+  memcpy(da->aname, b + namelen, namelen);
   int variance = sizeof(byte *) + sizeof(int);
-  memcpy(da + variance, b,
+  memcpy((char *)da + variance, b,
           sizeof(dns_answer) - variance);
   return 1;
 }
@@ -54,10 +58,10 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
 char *dns_query_name(dns_question *dq) {
   if (dq == NULL) return NULL;
   char *name = malloc(dq->namelen - 1);
-  name[0] = 0;
+  memset(name, 0, dq->namelen - 1);
 
   int i, sec_len, len_count; int is_len = 1;
-  for (i = 0; i <dq->namelen - 1; i++) {
+  for (i = 0; i < dq->namelen - 1; i++) {
     if (is_len) {
       sec_len = dq->qname[i];
       is_len = 0;
@@ -117,6 +121,7 @@ void dns_edit_header(dns_header *dh, short qr, byte rcode) {
     dh->type = DNS_RESPONSE;
     dh->qdcount = ntohs(1);
   }
+  dh->ignore = 0;
 }
 
 /**
@@ -138,8 +143,8 @@ dns_header *dns_create_header(short qr, byte rcode) {
 
 void dns_edit_question(dns_question *dq) {
   if (dq == NULL) return;
-  dq->qtype = 0;
-  dq->qclass = 0;
+  dq->qtype = htons(1);
+  dq->qclass = htons(1);
 }
 
 #define NAME "5video2cs3cmu3edu0"
@@ -203,7 +208,7 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
   if (dq != NULL) {
     *buflen += (sizeof(dns_question) - variance) + dq->namelen;
   }
-  else if (da != NULL) {
+  if (da != NULL) {
     *buflen += (sizeof(dns_answer) - variance) + da->namelen;
   }
 
@@ -214,12 +219,13 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
   if (dq != NULL) {
     memcpy(buf + delta, dq->qname, dq->namelen);
     delta += dq->namelen;
-    memcpy(buf + delta, dq + variance, sizeof(dns_question) - variance);
+    memcpy(buf + delta, (char *)dq + variance, sizeof(dns_question) - variance);
+    delta += sizeof(dns_question) - variance;
   }
-  else if (da != NULL) {
+  if (da != NULL) {
     memcpy(buf + delta, da->aname, da->namelen);
     delta += da->namelen;
-    memcpy(buf + delta, da + variance, sizeof(dns_answer) - variance);
+    memcpy(buf + delta, (char *)da + variance, sizeof(dns_answer) - variance);
   }
 
   return buf;

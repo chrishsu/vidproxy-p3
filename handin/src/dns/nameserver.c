@@ -109,7 +109,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
  */
 void process_udp() {
   struct sockaddr_in from;
-  socklen_t fromlen;
+  socklen_t fromlen = sizeof(from);
   char buf[MAX_UDP_BUF];
 
   printf("processing udp\n");
@@ -120,6 +120,8 @@ void process_udp() {
     fprintf(stderr, "Error in process_udp!\n");
     return;
   }
+
+  printf("bytes_read = %d\n", (int)bytes_read);
 
   dns_header dh;
   dns_process_header(buf, &dh);
@@ -135,6 +137,7 @@ void process_udp() {
                     bytes_read - sizeof(dns_header), &dq);
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(&dq);
+    printf("name: '%s'\n", name);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
       send_valid_udp(&dh, &dq, name, &from);
     } else {
