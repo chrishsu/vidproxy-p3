@@ -80,14 +80,16 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
   char *ip;
   int server_ip;
 
+  char source[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &(dest->sin_addr), source, INET_ADDRSTRLEN);
+
   printf("sending valid udp\n");
   if (roundrobin) {
     ip = rr_next_server();
   } else {
-    char source[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &(dest->sin_addr), source, INET_ADDRSTRLEN);
     printf("Finding closest to '%s'\n", source);
-
+    printf("servers = %p\n", servers);
+    printf("servers->ip = '%s'\n", servers->ip);
     node_list *result = closest_server(graph, source, servers);
     ip = result->ip;
     printf("Result: '%s'\n", ip);
@@ -105,9 +107,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
 
   send_udp(buf, buflen, dest);
 
-  char client_ip[INET_ADDRSTRLEN];
-  inet_ntop(AF_INET, &(myaddr.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
-  log_print(client_ip, name, ip);
+  log_print(source, name, ip);
 
   free(da->aname);
   free(da);
@@ -212,6 +212,7 @@ int main(int argc, char **argv) {
   if (roundrobin) {
     rr_parse_servers(servers_file);
   } else {
+    rr_parse_servers(servers_file);
     graph = parse_file(lsas_file);
     // LSA
   }

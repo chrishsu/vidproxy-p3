@@ -129,6 +129,7 @@ node_list *parse_file(char *LSAfile) {
     if (ret_val <= 0)
       break;
 
+    neighbor_list *neighbors = malloc(sizeof(node_list));
     neighbors->next = NULL;
     char *next = neighbor_str;
     while (1) {
