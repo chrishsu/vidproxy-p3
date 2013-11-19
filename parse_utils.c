@@ -28,7 +28,6 @@ bitrate_list *parse_xml(char *buf) {
   #define LINE_LEN 256
   char line[LINE_LEN];
   char *pt = buf;
-  int total = 0;
   bitrate_list *list = NULL;
   bitrate_list *next = NULL;
   // Find media element.
@@ -58,7 +57,7 @@ bitrate_list *parse_xml(char *buf) {
  * @return 1 on success, 0 on failure.
  */
 int parse_uri(char *buf, int *br) {
-  if (sscanf(buf, "GET /vod/%d%Seg%*d-Frag%*d %*n", br) < 1) {
+  if (sscanf(buf, "GET /vod/%dSeg%*d-Frag%*d %*n", br) < 1) {
     return 0;
   }
   return 1;
@@ -76,6 +75,7 @@ int parse_uri(char *buf, int *br) {
 char *write_uri(char *buf, int buf_size, int br) {
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
+  leftover = 0; seg_num = 0; frag_num = 0;
   if (sscanf(buf, "GET /vod/%*d%Seg%d-Frag%d %n", seg_num, frag_num, leftover) < 3) {
     return NULL;
   }
