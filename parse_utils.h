@@ -11,6 +11,7 @@ typedef struct bitrate_list {
   struct bitrate_list *next;
 } bitrate_list;
 
+void bitrate_list_free(bitrate_list *bl);
 bitrate_list *parse_xml(char *buf);
 int parse_uri(char *buf, int *br);
 char *write_uri(char *buf, int buf_size, int br);

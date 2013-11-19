@@ -18,6 +18,20 @@ bitrate_list *bitrate_list_add(bitrate_list *bl, int br) {
 }
 
 /**
+ * Deletes the bitrate_list.
+ *
+ * @param[in/out] bl  The original bitrate list.
+ */
+void bitrate_list_free(bitrate_list *bl) {
+  bitrate_list *cur;
+  while (bl != NULL) {
+    cur = bl;
+    bl = bl->next;
+    free(cur);
+  }
+}
+
+/**
  * Gets a list of bitrates from an xml file.
  *
  * @param[in] buf  The buffer.
@@ -26,7 +40,6 @@ bitrate_list *bitrate_list_add(bitrate_list *bl, int br) {
  */
 bitrate_list *parse_xml(char *buf) {
   #define LINE_LEN 256
-  char line[LINE_LEN];
   char *pt = buf;
   bitrate_list *list = NULL;
   bitrate_list *next = NULL;
@@ -36,15 +49,16 @@ bitrate_list *parse_xml(char *buf) {
     // Find bitrate attribute.
     if ((spt = strstr(pt, "bitrate=")) != NULL) {
       int bitrate;
-      if (sscanf(spt, "bitrate=\"%d\"%*n", &bitrate) < 1) {
+      if (sscanf(spt, "bitrate=\"%d\"", &bitrate) < 1) {
         continue;
       }
       next = bitrate_list_add(next, bitrate);
       // Set list head.
       if (list == NULL) list = next;
     }
+    pt = pt + 1; // Move pointer forward.
   }
-  
+
   return list;
 }
 
@@ -53,11 +67,13 @@ bitrate_list *parse_xml(char *buf) {
  *
  * @param[in] buf  The buffer.
  * @param[out] br  The bitrate.
- * 
+ *
  * @return 1 on success, 0 on failure.
  */
 int parse_uri(char *buf, int *br) {
-  if (sscanf(buf, "GET /vod/%dSeg%*d-Frag%*d %*n", br) < 1) {
+  printf("%s\n", buf);
+  if (sscanf(buf, "GET /vod/%dSeq%*d-Frag%*d", br) < 1) {
+    printf("it got here!\n");
     return 0;
   }
   return 1;
@@ -76,11 +92,13 @@ char *write_uri(char *buf, int buf_size, int br) {
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
-  if (sscanf(buf, "GET /vod/%*d%Seg%d-Frag%d %n", seg_num, frag_num, leftover) < 3) {
+  if (sscanf(buf, "GET /vod/%*dSeq%d-Frag%d %n",
+	     &seg_num, &frag_num, &leftover) < 2) {
     return NULL;
   }
-  
-  sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s", br, seg_num, frag_num, buf+leftover);
-  
+
+  sprintf(newbuf, "GET /vod/%dSeq%d-Frag%d %s",
+	  br, seg_num, frag_num, buf+leftover);
+
   return newbuf;
 }
