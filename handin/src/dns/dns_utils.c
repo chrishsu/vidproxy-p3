@@ -48,9 +48,10 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
   memcpy(da->aname, b + namelen, namelen);
   int variance = sizeof(byte *) + sizeof(int);
   int delta = sizeof(dns_answer) - variance
-              - sizeof(short) - sizeof(int);
+              - sizeof(short) - 2 * sizeof(int);
   memcpy((char *)da + variance, b + namelen, delta);
-  mempcy(da->rdata, b + namelen + delta, sizeof(int));
+
+  memcpy(&(da->rdata), b + namelen + delta, sizeof(int));
   
   return 1;
 }
@@ -212,7 +213,13 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
     *buflen += (sizeof(dns_question) - variance) + dq->namelen;
   }
   if (da != NULL) {
-    *buflen += (sizeof(dns_answer) - variance) + da->namelen;
+    printf("size = %d\n", (int)(sizeof(dns_answer) - variance));
+    printf("da->namelen = %d\n", (int)da->namelen);
+    printf("Adding %ld\n", 
+	   (sizeof(dns_answer) - variance) + da->namelen 
+	   - sizeof(short) - sizeof(int));
+    *buflen += (sizeof(dns_answer) - variance) + da->namelen 
+               - sizeof(short) - sizeof(int);
   }
 
   buf = malloc(*buflen);
@@ -226,13 +233,13 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
     delta += sizeof(dns_question) - variance;
   }
   if (da != NULL) {
-    memcpy(buf + delta, da->aname, da->namelen);
+    memcpy(buf + delta, dq->qname, da->namelen);
     delta += da->namelen;
-    int offset = sizeof(dns_answer) - variance
+    int offset = sizeof(dns_answer) - sizeof(int)- variance
                  - sizeof(short) - sizeof(int);
     memcpy(buf + delta, (char *)da + variance, offset);
     delta += offset;
-    memcpy(buf + delta, da->rdata, sizeof(int));
+    memcpy(buf + delta, &(da->rdata), sizeof(int));
   }
 
   return buf;
