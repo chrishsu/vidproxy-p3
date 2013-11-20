@@ -3,8 +3,8 @@
 /**
  * Adds an item to the bitrate_list.
  *
- * @param[in/out] bl  The original bitrate list.
- * @param[in] br      The new bitrate to add.
+ * @param[out] bl  The original bitrate list.
+ * @param[in] br   The new bitrate to add.
  *
  * @return Pointer to new bitrate list.
  */
@@ -20,7 +20,7 @@ bitrate_list *bitrate_list_add(bitrate_list *bl, int br) {
 /**
  * Deletes the bitrate_list.
  *
- * @param[in/out] bl  The original bitrate list.
+ * @param[out] bl  The original bitrate list.
  */
 void bitrate_list_free(bitrate_list *bl) {
   bitrate_list *cur;

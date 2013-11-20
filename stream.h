@@ -10,8 +10,9 @@ typedef struct {
   request *cur_request;
 } stream;
 
-stream *stream_init();
+stream *stream_init(int br);
 void stream_add_request(stream *s, request *r);
+void stream_calc_throughput(stream *s, int alpha);
 void stream_free(stream *s);
 
 #endif

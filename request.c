@@ -14,7 +14,6 @@ request *request_init(int br, char *ip, char *name) {
   request *r = malloc(sizeof(request));
   r->start = time(NULL);
   r->end = 0;
-  r->throughput = 0;
   r->bitrate = br;
   memcpy(r->client_ip, ip, IP_LEN);
   r->chunksize = 0;
@@ -22,13 +21,22 @@ request *request_init(int br, char *ip, char *name) {
   return r;
 }
 
-void request_complete(request *r) {
+/**
+ * Completes the request.
+ *
+ * @param[out] r         The request.
+ * @param[in] chunksize  The size of the chunk.
+ */
+void request_complete(request *r, int chunksize) {
   if (r == NULL) return;
   r->end = time(NULL);
+  r->chunksize = chunksize;
 }
 
 /**
  * Frees the request object.
+ *
+ * @param[out] r  The request.
  */
 void request_free(request *r) {
   if (r == NULL) return;

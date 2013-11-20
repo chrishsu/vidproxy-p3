@@ -1,5 +1,5 @@
 # Variables
-TESTBINS = test_parse_utils
+TESTBINS = test_parse_utils test_stream
 
 # Implicit .o target
 
@@ -17,6 +17,8 @@ clean:
 
 # Testing
 
-tests: tests/test_parse_utils.o
+tests: tests/test_parse_utils.o tests/test_stream.o
 
 test_parse_utils: test_parse_utils.o parse_utils.o
+
+test_stream: test_stream.o stream.o request.o
