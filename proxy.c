@@ -6,7 +6,6 @@
  * Based on the starting file echo_server.c and the given file
  * cgi_example.c.
  */
-
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <stdio.h>
@@ -17,16 +16,13 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <openssl/bio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <netdb.h>
 
-#define MAX_FDS 1024
+#define MAX_FDS 1023
 #define MAX_REQ_SIZE 8192
 #define MAX_FILENAME 128
 #define IP_STRING_MAX 25 // Extra large to avoid overflow in case of mistake
@@ -46,11 +42,10 @@ char wwwip[IP_STRING_MAX];
 int port, sock;
 
 // FD sets:
-int nfds = 0;
 fd_set readfds, writefds, exceptfds;
 
 char bufs[MAX_FDS + 1][2 * (MAX_REQ_SIZE + 5)];
-char buflens[MAX_FDS + 1];
+int buflens[MAX_FDS + 1];
 char types[MAX_FDS + 1]; // client or server, see type defined above
 int server_socks[MAX_FDS + 1]; // server socket for the indexed client socket
 int client_socks[MAX_FDS + 1]; // client socket for the indexed server socket
@@ -83,8 +78,7 @@ int add_client() {
   memset(&fakehints, 0, sizeof(fakehints));
   fakehints.ai_family = AF_INET;
   fakehints.ai_socktype = SOCK_STREAM;
-  fakehints.ai_flags = AI_PASSIVE;
-  if (getaddrinfo(NULL, fakeip, &fakehints, &fakeinfo)) {
+  if (getaddrinfo(fakeip, "0", &fakehints, &fakeinfo)) {
     fprintf(stderr, "Error getting fake server address info!\n");
     close(client_sock);
     return -1;
@@ -93,8 +87,7 @@ int add_client() {
   memset(&servhints, 0, sizeof(servhints));
   servhints.ai_family = AF_INET;
   servhints.ai_socktype = SOCK_STREAM;
-  servhints.ai_flags = AI_PASSIVE;
-  if (getaddrinfo(NULL, wwwip, &servhints, &servinfo)) {
+  if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
     fprintf(stderr, "Error getting real server address info!\n");
     close(client_sock);
     return -1;
@@ -109,7 +102,7 @@ int add_client() {
   }
 
   if (bind(serv_sock, (struct sockaddr *)fakeinfo->ai_addr, fakeinfo->ai_addrlen)) {
-    fprintf(stderr, "Error binding server socket!\n");
+    fprintf(stderr, "Error binding server socket: %d!\n", errno);
     close(client_sock);
     close(serv_sock);
     return -1;
@@ -126,26 +119,39 @@ int add_client() {
   types[serv_sock] = SERVERTYPE;
   server_socks[client_sock] = serv_sock;
   client_socks[serv_sock] = client_sock;
-  if (client_sock >= nfds)
-    nfds = client_sock + 1;
   FD_SET(client_sock, &readfds);
+  FD_SET(serv_sock, &readfds);
 
+  printf("Added client!\n");
   return 0;
 }
 
 void remove_client(int client_sock) {
+  FD_CLR(client_sock, &readfds);
+  FD_CLR(server_socks[client_sock], &readfds);
   close(client_sock);
   close(server_socks[client_sock]);
 }
 
 void remove_server(int server_sock) {
+  FD_CLR(server_sock, &readfds);
+  FD_CLR(client_socks[server_sock], &readfds);
   close(server_sock);
   close(client_socks[server_sock]);
+}
+
+int complement_sock(int sock) {
+  if (types[sock] == CLIENTTYPE)
+    return server_socks[sock];
+  return client_socks[sock];
 }
 
 int main(int argc, char* argv[])
 {
   signal(SIGINT, signal_handler);
+  int i;
+  for (i = 0; i <= MAX_FDS; i++)
+    buflens[i] = 0;
 
   strcpy(logfile, argv[1]);
   sscanf(argv[2], "%f", &alpha);
@@ -184,7 +190,8 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
   FD_SET(sock, &readfds);
-  nfds = sock + 1;
+
+  printf("Entering select loop!\n");
 
   fd_set readfdscopy, writefdscopy;
   while (1) {
@@ -192,10 +199,10 @@ int main(int argc, char* argv[])
     FD_ZERO(&readfdscopy);
     FD_ZERO(&writefdscopy);
     int i;
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i <= MAX_FDS; i++) {
       // Decide if we actually want to read/write from this client:
       if (FD_ISSET(i, &readfds) && 
-	  buflens[i] == 0) { // Don't read if we haven't finished writing
+	  buflens[complement_sock(i)] == 0) {
 	FD_SET(i, &readfdscopy);
       }
       if (FD_ISSET(i, &writefds) || 
@@ -204,17 +211,19 @@ int main(int argc, char* argv[])
       }
     }
 
-    int select_return = select(nfds, &readfdscopy, &writefdscopy, &exceptfds, NULL);
+    int select_return = select(MAX_FDS, &readfdscopy, &writefdscopy, &exceptfds, NULL);
     if (select_return < 0) {
+      printf("Select error: %d\n", errno);
       if (errno == EINTR)
 	clean_up();
       return EXIT_FAILURE;
     }
     if (select_return == 0) {
+      printf("Select returned 0\n");
       break;
     }
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i <= MAX_FDS; i++) {
       /* The listening socket is handled separately. */
       if (i == sock)
 	continue;
@@ -242,7 +251,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    for (i = 0; i < nfds; i++) {
+    for (i = 0; i <= MAX_FDS; i++) {
       if (i == sock)
 	continue;
 
