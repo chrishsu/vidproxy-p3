@@ -14,7 +14,7 @@ int main() {
   stream *s = stream_init(200);
 
   /* Add first request */
-  stream_add_request(s, request_init(s->cur_bitrate, "1.1.1.1", "300Seq1-Frag1"));
+  stream_add_request(s, request_init(s->cur_bitrate));
   sleep(1);
   stream_request_complete(s, 15000);
   diff = (int)(s->cur_request->end - s->cur_request->start);
@@ -28,7 +28,7 @@ int main() {
   printf("calc throughput: %d\n\n", s->throughput);
 
   /* Add another request */
-  stream_add_request(s, request_init(s->cur_bitrate, "1.1.1.1", "300Seq1-Frag2"));
+  stream_add_request(s, request_init(s->cur_bitrate));
   sleep(1);
   stream_request_complete(s, 15000);
   diff = (int)(s->cur_request->end - s->cur_request->start);

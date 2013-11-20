@@ -40,7 +40,7 @@ int main() {
   char *header_2 = "Content-Type: text/html\r\nContent-Length: 9001\r\nMore Stuff\r\n\r\n";
   int length = 0;
 
-  printf("parse_headers: fail\n");=
+  printf("parse_headers: fail\n");
   printf("result: %d\n\n", parse_headers(header_fail, &length, 100));
   printf("parse_headers: 1\n");
   printf("result: %d\n", parse_headers(header_1, &length, 100));
@@ -78,7 +78,7 @@ int main() {
   printf("result: %d\n\n", parse_f4m(f4m_work, 33));
 
   printf("write_f4m: work\n");
-  printf("start: %s\n", f4m_work, 33);
+  printf("start: %s\n", f4m_work);
   replace_f4m(f4m_work, 33);
   printf("result: %s\n\n", f4m_work);
 

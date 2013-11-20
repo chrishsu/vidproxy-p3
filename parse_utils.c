@@ -41,15 +41,14 @@ void bitrate_list_free(bitrate_list *bl) {
  */
 bitrate_list *parse_xml(char *buf, int buf_size) {
   #define LINE_LEN 256
-  int len = buf_size;
   char *pt = buf;
   bitrate_list *list = NULL;
   bitrate_list *next = NULL;
   // Find media element.
-  while((pt = strnstr(pt, "<media", len)) != NULL) {
+  while((pt = strstr(pt, "<media")) != NULL) {
     char *spt;
     // Find bitrate attribute.
-    if ((spt = strnstr(pt, "bitrate=", len)) != NULL) {
+    if ((spt = strstr(pt, "bitrate=")) != NULL) {
       int bitrate;
       if (sscanf(spt, "bitrate=\"%d\"", &bitrate) < 1) {
         continue;
@@ -59,7 +58,6 @@ bitrate_list *parse_xml(char *buf, int buf_size) {
       if (list == NULL) list = next;
     }
     pt = pt + 1; // Move pointer forward.
-    len = (int)(pt - buf);
   }
 
   return list;
@@ -76,7 +74,7 @@ bitrate_list *parse_xml(char *buf, int buf_size) {
  */
 int parse_headers(char *buf, int *len, int buf_size) {
   char *pt = buf;
-  if ((pt = strnstr(buf, "Content-Length:", buf_size)) != NULL) {
+  if ((pt = strstr(buf, "Content-Length:")) != NULL) {
     if (sscanf(pt, "Content-Length: %d\n", len) < 1) {
       return 0;
     }
@@ -136,7 +134,7 @@ int replace_uri(char *buf, int buf_size, int br) {
  */
 int parse_f4m(char *buf, int buf_size) {
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m") < 0 ||
-      strnstr(buf, "GET /vod/big_buck_bunny.f4m", buf_size) == NULL) {
+      strstr(buf, "GET /vod/big_buck_bunny.f4m") == NULL) {
     return 0;
   }
   return 1;

@@ -18,7 +18,7 @@ stream *stream_init(int br) {
 /**
  * Add a request to the stream object.
  * Automatically frees any previous request.
- * 
+ *
  * @param[in/out] s  The stream.
  * @param[in] r      The request.
  */
