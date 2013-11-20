@@ -66,7 +66,7 @@ int main() {
   printf("write_uri: work\n");
   printf("start: %s\n", uri_work);
   bitrate = 1000;
-  write_uri(uri_work, 28, bitrate);
+  replace_uri(uri_work, 28, bitrate);
   printf("result: %s\n\n", uri_work);
 
   char *f4m_fail = "GET /vod/big_buck_bunny.f4v";
@@ -80,7 +80,7 @@ int main() {
 
   printf("write_f4m: work\n");
   printf("start: %s\n", f4m_work);
-  write_f4m(f4m_work, 33);
+  replace_f4m(f4m_work, 33);
   printf("result: %s\n\n", f4m_work);
 
 
