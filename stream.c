@@ -48,12 +48,13 @@ void stream_request_complete(stream *s, int chunksize) {
  * @param[in/out] s  The stream.
  * @param[in] alpha  The alpha value.
  */
-void stream_calc_throughput(stream *s, int alpha) {
+void stream_calc_throughput(stream *s, float alpha) {
   if (s == NULL) return;
   if (s->cur_request == NULL) return;
-  int diff = (int)(r->end - r->start);
-  int t_new = r->chunksize/diff;
-  s->throughput = (alpha * t_new) + (1 - alpha) * s->throughput;
+  int diff = (int)(s->cur_request->end - s->cur_request->start);
+  int t_new = s->cur_request->chunksize/diff;
+  int t_cur = (alpha * t_new) + ((1 - alpha) * s->throughput);
+  s->throughput = t_cur;
 }
 
 /**

@@ -2,6 +2,7 @@
 #ifndef VP_REQUEST
 #define VP_REQUEST
 
+#include <stdlib.h>
 #include <time.h>
 
 #define IP_LEN  16
