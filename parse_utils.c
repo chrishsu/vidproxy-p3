@@ -63,6 +63,24 @@ bitrate_list *parse_xml(char *buf) {
 }
 
 /**
+ * Gets the content length from the buffer.
+ *
+ * @param[in] buf  The buffer.
+ *
+ * @return 1 on success, 0 otherwise.
+ */
+int parse_headers(char *buf, int *len) {
+  char *pt = buf;
+  if ((pt = strstr(buf, "Content-Length:") != NULL) {
+    if (sscanf(pt, "Content-Length: %d\n", len) < 1) {
+      return 0;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+/**
  * Gets the bitrate from a uri.
  *
  * @param[in] buf  The buffer.

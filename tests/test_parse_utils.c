@@ -14,7 +14,7 @@ void print_bitrate_list(bitrate_list *bl) {
 int main() {
   printf("parse_utils tests..\n\n");
 
-  /** XML Tests **/
+  /** XML tests **/
   char *xml_blank = "";
   char *xml_1 = "<media something bitrate=\"200\" else>";
   char *xml_2 = "<startshere><media bitrate=\"200\"><media bitrate=\"400\"></startshere>";
@@ -34,6 +34,22 @@ int main() {
   print_bitrate_list(bl);
   bitrate_list_free(bl);
 
+  /** Headers tests **/
+  char *header_fail = "stuf stuff stuff";
+  char *header_1 = "Content-Length: 9001";
+  char *header_2 = "Content-Type: text/html\r\nContent-Length: 9001\r\nMore Stuff\r\n\r\n";
+  int length = 0;
+  
+  printf("parse_headers: fail\n");
+  printf("result: %d\n\n", parse_headers(header_fail, &length));
+  
+  printf("parse_headers: 1\n");
+  printf("result: %d\n", parse_headers(header_1, &length));
+  printf("length: %d\n\n", length);
+
+  printf("parse_headers: 2\n");
+  printf("result: %d\n", parse_headers(header_2, &length));
+  printf("length: %d\n\n", length);
 
   /** URI tests **/
   char *uri_fail = "GET something ELSE";
