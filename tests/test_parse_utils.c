@@ -39,10 +39,9 @@ int main() {
   char *header_1 = "Content-Length: 9001";
   char *header_2 = "Content-Type: text/html\r\nContent-Length: 9001\r\nMore Stuff\r\n\r\n";
   int length = 0;
-  
-  printf("parse_headers: fail\n");
+
+  printf("parse_headers: fail\n");=
   printf("result: %d\n\n", parse_headers(header_fail, &length, 100));
-  
   printf("parse_headers: 1\n");
   printf("result: %d\n", parse_headers(header_1, &length, 100));
   printf("length: %d\n\n", length);
@@ -53,7 +52,7 @@ int main() {
 
   /** URI tests **/
   char *uri_fail = "GET something ELSE";
-  char *uri_work[28+25] = "GET /vod/200Seq1-Frag3 ELSE";
+  char uri_work[28+25] = "GET /vod/200Seq1-Frag3 ELSE";
   int bitrate;
 
   printf("parse_uri: fail\n");
@@ -70,7 +69,7 @@ int main() {
   printf("result: %s\n\n", uri_work);
 
   char *f4m_fail = "GET /vod/big_buck_bunny.f4v";
-  char *f4m_work[33+25] = "GET /vod/big_buck_bunny.f4m ELSE";
+  char f4m_work[33+25] = "GET /vod/big_buck_bunny.f4m ELSE";
 
   printf("parse_f4m: fail\n");
   printf("result: %d\n\n", parse_f4m(f4m_fail, 100));

@@ -147,10 +147,10 @@ int parse_f4m(char *buf, int buf_size) {
  *
  * @param[in/out] buf   The buffer.
  * @param[in] buf_size  The buffer size.
- * 
+ *
  * @return 1 on success, 0 on failure.
  */
-char *replace_f4m(char *buf, int buf_size) {
+int replace_f4m(char *buf, int buf_size) {
   char *newbuf = malloc(buf_size + 7);
   int leftover = 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",
@@ -161,7 +161,7 @@ char *replace_f4m(char *buf, int buf_size) {
   sprintf(newbuf, "GET /vod/big_buck_bunny_nolist.f4m %s",
           buf+leftover);
 
-  mempcy(buf, newbuf, buf_size + 7);
+  memcpy(buf, newbuf, buf_size + 7);
   free(newbuf);
   return 1;
 }
