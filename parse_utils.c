@@ -109,8 +109,9 @@ char *write_uri(char *buf, int buf_size, int br) {
  *
  * @return 1 on success, 0 on failure.
  */
-int parse_nolist(char *buf) {
-  if (sscanf(buf, "GET /vod/big_buck_bunny.f4m") < 0) {
+int parse_f4m(char *buf) {
+  if (sscanf(buf, "GET /vod/big_buck_bunny.f4m") < 0 ||
+      strstr(buf, "GET /vod/big_buck_bunny.f4m") == NULL) {
     return 0;
   }
   return 1;
@@ -127,12 +128,12 @@ int parse_nolist(char *buf) {
  */
 char *write_f4m(char *buf, int buf_size) {
   char *newbuf = malloc(buf_size + 7);
-  int leftover;
+  int leftover = 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",
-      leftover) < 0) {
+      &leftover) < 0) {
     return 0;
   }
-  
+
   sprintf(newbuf, "GET /vod/big_buck_bunny_nolist.f4m %s",
           buf+leftover);
 

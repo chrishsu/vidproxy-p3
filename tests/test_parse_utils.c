@@ -53,23 +53,24 @@ int main() {
   char *result = write_uri(uri_work, 28, bitrate);
   printf("result: %s\n\n", result);
   free(result);
-  
-  char *f4m_fail = "GET /vod/big_buck_bunny.f4";
-  char *f4m_work = "GET /vod/big_buck_bunny.f4v ELSE";
+  result = NULL;
+
+  char *f4m_fail = "GET /vod/big_buck_bunny.f4v";
+  char *f4m_work = "GET /vod/big_buck_bunny.f4m ELSE";
 
   printf("parse_f4m: fail\n");
-  printf("result: %d\n\n", parse_uri(f4m_fail));
+  printf("result: %d\n\n", parse_f4m(f4m_fail));
 
   printf("parse_f4m: work\n");
-  printf("result: %d\n", parse_uri(f4m_work));
+  printf("result: %d\n\n", parse_f4m(f4m_work));
 
   printf("write_f4m: work\n");
   printf("start: %s\n", f4m_work);
-  char *result = write_uri(f4m_work, 32);
+  result = write_f4m(f4m_work, 33);
   printf("result: %s\n\n", result);
   free(result);
-  
-  
+
+
   printf("All tests passed!\n");
   return 0;
 }
