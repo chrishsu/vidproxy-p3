@@ -11,9 +11,9 @@ typedef struct {
   time_t start;
   time_t end;
   int bitrate;
-  char[IP_LEN] client_ip;
+  char client_ip[IP_LEN];
   int chunksize;
-  char[CHUNKNAME_LEN] chunkname;
+  char chunkname[CHUNKNAME_LEN];
 } request;
 
 request *request_init(int br, char *ip, char *name);

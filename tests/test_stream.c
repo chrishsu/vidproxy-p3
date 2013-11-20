@@ -16,8 +16,8 @@ int main() {
   sleep(1000);
   request_complete(s->cur_request, 15000);
   
-  diff = (int)(s->r->end - s->r->start);
-  throughput = s->r->chunksize/diff;
+  diff = (int)(s->cur_request->end - s->cur_request->start);
+  throughput = s->cur_request->chunksize/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 1..\n");
   printf("diff: %d\n", diff);
@@ -31,8 +31,8 @@ int main() {
   sleep(1000);
   request_complete(s->cur_request, 15000);
   
-  diff = (int)(s->r->end - s->r->start);
-  throughput = s->r->chunksize/diff;
+  diff = (int)(s->cur_request->end - s->cur_request->start);
+  throughput = s->cur_request->chunksize/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 2..\n");
   printf("diff: %d\n", diff);
