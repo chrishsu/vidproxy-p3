@@ -96,29 +96,29 @@ int parse_uri(char *buf, int *br) {
 }
 
 /**
- * Writes a new uri and request.
- * NOTE: return string will need to be freed.
+ * Replaces the uri with the new bitrate.
  *
- * @param[in] buf       The buffer.
+ * @param[in/out] buf   The buffer.
  * @param[in] buf_size  The buffer size.
  * @param[in] br        The bitrate.
  *
- * @return The new uri string.
+ * @return 1 on success, 0 on failure.
  */
-char *write_uri(char *buf, int buf_size, int br) {
-  //MEMCPY
+int replace_uri(char *buf, int buf_size, int br) {
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
   if (sscanf(buf, "GET /vod/%*dSeq%d-Frag%d %n",
 	    &seg_num, &frag_num, &leftover) < 2) {
-    return NULL;
+    return 0;
   }
 
   sprintf(newbuf, "GET /vod/%dSeq%d-Frag%d %s",
           br, seg_num, frag_num, buf+leftover);
 
-  return newbuf;
+  memcpy(buf, newbuf, buf_size + (br/10) + 1);
+  free(newbuf);
+  return 1;
 }
 
 /**
@@ -137,15 +137,14 @@ int parse_f4m(char *buf) {
 }
 
 /**
- * Writes a new f4m request.
- * NOTE: return string will need to be freed.
+ * Replaces uri with a new f4m request.
  *
- * @param[in] buf       The buffer.
+ * @param[in/out] buf   The buffer.
  * @param[in] buf_size  The buffer size.
- *
- * @return The new uri string.
+ * 
+ * @return 1 on success, 0 on failure.
  */
-char *write_f4m(char *buf, int buf_size) {
+char *replace_f4m(char *buf, int buf_size) {
   char *newbuf = malloc(buf_size + 7);
   int leftover = 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",
@@ -156,5 +155,7 @@ char *write_f4m(char *buf, int buf_size) {
   sprintf(newbuf, "GET /vod/big_buck_bunny_nolist.f4m %s",
           buf+leftover);
 
-  return newbuf;
+  mempcy(buf, newbuf, buf_size + 7);
+  free(newbuf);
+  return 1;
 }

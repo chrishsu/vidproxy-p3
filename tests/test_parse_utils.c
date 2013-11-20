@@ -53,7 +53,7 @@ int main() {
 
   /** URI tests **/
   char *uri_fail = "GET something ELSE";
-  char *uri_work = "GET /vod/200Seq1-Frag3 ELSE";
+  char *uri_work[28+25] = "GET /vod/200Seq1-Frag3 ELSE";
   int bitrate;
 
   printf("parse_uri: fail\n");
@@ -66,13 +66,11 @@ int main() {
   printf("write_uri: work\n");
   printf("start: %s\n", uri_work);
   bitrate = 1000;
-  char *result = write_uri(uri_work, 28, bitrate);
-  printf("result: %s\n\n", result);
-  free(result);
-  result = NULL;
+  write_uri(uri_work, 28, bitrate);
+  printf("result: %s\n\n", uri_work);
 
   char *f4m_fail = "GET /vod/big_buck_bunny.f4v";
-  char *f4m_work = "GET /vod/big_buck_bunny.f4m ELSE";
+  char *f4m_work[33+25] = "GET /vod/big_buck_bunny.f4m ELSE";
 
   printf("parse_f4m: fail\n");
   printf("result: %d\n\n", parse_f4m(f4m_fail));
@@ -82,9 +80,8 @@ int main() {
 
   printf("write_f4m: work\n");
   printf("start: %s\n", f4m_work);
-  result = write_f4m(f4m_work, 33);
-  printf("result: %s\n\n", result);
-  free(result);
+  write_f4m(f4m_work, 33);
+  printf("result: %s\n\n", f4m_work);
 
 
   printf("All tests passed!\n");
