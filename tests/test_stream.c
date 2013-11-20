@@ -14,7 +14,7 @@ int main() {
   /* Add first request */
   stream_add_request(s, request_init(s->cur_bitrate, "1.1.1.1", "300Seq1-Frag1"));
   sleep(1000);
-  request_complete(s->cur_request, 15000);
+  stream_request_complete(s, 15000);
   
   diff = (int)(s->cur_request->end - s->cur_request->start);
   throughput = s->cur_request->chunksize/diff;
@@ -29,7 +29,7 @@ int main() {
   /* Add another request */
   stream_add_request(s, request_init(s->cur_bitrate, "1.1.1.1", "300Seq1-Frag2"));
   sleep(1000);
-  request_complete(s->cur_request, 15000);
+  stream_request_complete(s, 15000);
   
   diff = (int)(s->cur_request->end - s->cur_request->start);
   throughput = s->cur_request->chunksize/diff;

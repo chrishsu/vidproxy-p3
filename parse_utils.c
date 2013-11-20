@@ -106,6 +106,7 @@ int parse_uri(char *buf, int *br) {
  * @return The new uri string.
  */
 char *write_uri(char *buf, int buf_size, int br) {
+  //MEMCPY
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
