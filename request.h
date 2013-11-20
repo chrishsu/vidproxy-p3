@@ -12,12 +12,10 @@ typedef struct {
   time_t start;
   time_t end;
   int bitrate;
-  char client_ip[IP_LEN];
   int chunksize;
-  char chunkname[CHUNKNAME_LEN];
 } request;
 
-request *request_init(int br, char *ip, char *name);
+request *request_init(int br);
 void request_complete(request *r, int chunksize);
 void request_free(request *r);
 

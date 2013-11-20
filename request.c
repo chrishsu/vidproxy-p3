@@ -5,19 +5,15 @@
  * and IP address.
  *
  * @param[in] br    The bit rate.
- * @param[in] ip    The IP string.
- * @param[in] name  The chunk name.
  *
  * @return The request object.
  */
-request *request_init(int br, char *ip, char *name) {
+request *request_init(int br) {
   request *r = malloc(sizeof(request));
   r->start = time(NULL);
   r->end = 0;
   r->bitrate = br;
-  memcpy(r->client_ip, ip, IP_LEN);
   r->chunksize = 0;
-  memcpy(r->chunkname, name, CHUNKNAME_LEN);
   return r;
 }
 
