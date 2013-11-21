@@ -2,6 +2,8 @@
 #ifndef VP_LOG
 #define VP_LOG
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "request.h"
 
 void log_init(char *filename);

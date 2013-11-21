@@ -1,21 +1,22 @@
 #include "request.h"
 
 /**
- * Initializes a request with the given bit rate, chunk name,
- * and IP address.
+ * Initializes a request with the given bit rate, seq num, and frag num.
  *
  * @param[in] br    The bit rate.
+ * @param[in] seq   The sequence number.
+ * @param[in] frag  The fragment number.
  *
  * @return The request object.
  */
-request *request_init(int br) {
+request *request_init(int br, int seq, int frag) {
   request *r = malloc(sizeof(request));
   r->start = time(NULL);
   r->end = 0;
   r->bitrate = br;
-  r->throughtput = 0.0;
-  r->seq_num = 0;
-  r->frag_num = 0;
+  r->throughput = 0.0;
+  r->seq_num = seq;
+  r->frag_num = frag;
   return r;
 }
 
@@ -29,6 +30,7 @@ void request_complete(request *r, int chunksize) {
   if (r == NULL) return;
   r->end = time(NULL);
   int diff = (int)(r->end - r->start);
+  if (diff == 0) diff = 1; // Don't divide by zero.
   r->throughput = chunksize/diff;
 }
 
