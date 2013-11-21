@@ -87,12 +87,13 @@ bitrate_list *parse_xml(char *buf, int buf_size) {
  * Gets the content length from the buffer.
  *
  * @param[in] buf       The buffer.
- * @param[out] len      The content length.
  * @param[in] buf_size  The buffer size.
+ * @param[out] len      The content length.
  *
  * @return 1 on success, 0 otherwise.
  */
-int parse_headers(char *buf, int *len, int buf_size) {
+int parse_headers(char *buf, int buf_size, int *len) {
+  //if (buf_size < 19) return 0;
   char *pt = buf;
   if ((pt = strstr(buf, "Content-Length:")) != NULL) {
     if (sscanf(pt, "Content-Length: %d\n", len) < 1) {
@@ -104,15 +105,20 @@ int parse_headers(char *buf, int *len, int buf_size) {
 }
 
 /**
- * Gets the bitrate from a uri.
+ * Gets the bitrate, sequence number, and fragment number from a uri.
  *
- * @param[in] buf  The buffer.
- * @param[out] br  The bitrate.
+ * @param[in] buf       The buffer.
+ * @param[in] buf_size  The buffer size.
+ * @param[out] br       The bitrate.
+ * @param[out] seq      The sequence number.
+ * @param[out] frag     The fragment number.
  *
  * @return 1 on success, 0 on failure.
  */
-int parse_uri(char *buf, int *br) {
-  if (sscanf(buf, "GET /vod/%dSeq%*d-Frag%*d", br) < 1) {
+int parse_uri(char *buf, int buf_size,
+              int *br, int *seq, int *frag) {
+  if (buf_size < 20) return 0;
+  if (sscanf(buf, "GET /vod/%dSeq%d-Frag%d", br, seq, frag) < 3) {
     return 0;
   }
   return 1;
@@ -128,6 +134,7 @@ int parse_uri(char *buf, int *br) {
  * @return 1 on success, 0 on failure.
  */
 int replace_uri(char *buf, int buf_size, int br) {
+  //if (buf_size < 21) return 0;
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
@@ -153,6 +160,7 @@ int replace_uri(char *buf, int buf_size, int br) {
  * @return 1 on success, 0 on failure.
  */
 int parse_f4m(char *buf, int buf_size) {
+  //if (buf_size < 27) return 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m") < 0 ||
       strstr(buf, "GET /vod/big_buck_bunny.f4m") == NULL) {
     return 0;
@@ -169,6 +177,7 @@ int parse_f4m(char *buf, int buf_size) {
  * @return 1 on success, 0 on failure.
  */
 int replace_f4m(char *buf, int buf_size) {
+  //if (buf_size < 28) return 0;
   char *newbuf = malloc(buf_size + 7);
   int leftover = 0;
   if (sscanf(buf, "GET /vod/big_buck_bunny.f4m %n",

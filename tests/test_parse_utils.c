@@ -41,26 +41,28 @@ int main() {
   int length = 0;
 
   printf("parse_headers: fail\n");
-  printf("result: %d\n\n", parse_headers(header_fail, &length, 100));
+  printf("result: %d\n\n", parse_headers(header_fail, 100, &length));
   printf("parse_headers: 1\n");
-  printf("result: %d\n", parse_headers(header_1, &length, 100));
+  printf("result: %d\n", parse_headers(header_1, 100, &length));
   printf("length: %d\n\n", length);
 
   printf("parse_headers: 2\n");
-  printf("result: %d\n", parse_headers(header_2, &length, 100));
+  printf("result: %d\n", parse_headers(header_2, 100, &length));
   printf("length: %d\n\n", length);
 
   /** URI tests **/
   char *uri_fail = "GET something ELSE";
   char uri_work[28+25] = "GET /vod/200Seq1-Frag3 ELSE";
-  int bitrate;
+  int bitrate, seq, frag;
 
   printf("parse_uri: fail\n");
-  printf("result: %d\n\n", parse_uri(uri_fail, &bitrate));
+  printf("result: %d\n\n", parse_uri(uri_fail, 100, &bitrate, &seq, &frag));
 
   printf("parse_uri: work\n");
-  printf("result: %d\n", parse_uri(uri_work, &bitrate));
-  printf("bitrate: %d\n\n", bitrate);
+  printf("result: %d\n", parse_uri(uri_work, 100, &bitrate, &seq, &frag));
+  printf("bitrate: %d\n", bitrate);
+  printf("seq: %d\n", seq);
+  printf("frag: %d\n\n", frag);
 
   printf("write_uri: work\n");
   printf("start: %s\n", uri_work);
