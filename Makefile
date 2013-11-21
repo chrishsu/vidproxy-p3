@@ -1,5 +1,5 @@
 # Variables
-TESTBINS = test_parse_utils test_stream
+TESTBINS = test_parse_utils test_stream test_bitrate_select
 
 # Implicit .o target
 
@@ -17,7 +17,9 @@ clean:
 
 # Testing
 
-tests: tests/test_parse_utils.o tests/test_stream.o
+tests: tests/test_parse_utils.o tests/test_stream.o tests/test_bitrate_select.o
+
+test_bitrate_select: test_bitrate_select.o parse_utils.o
 
 test_parse_utils: test_parse_utils.o parse_utils.o
 

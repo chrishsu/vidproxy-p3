@@ -32,6 +32,25 @@ void bitrate_list_free(bitrate_list *bl) {
 }
 
 /**
+ * Gets the highest bitrate below the throughput.
+ *
+ * @param[in] bl   The original bitrate list.
+ * @param[in] tpt  The throughput.
+ *
+ * @return The selected bitrate or 0 if the list was empty.
+ */
+int bitrate_list_select(bitrate_list *bl, int tpt) {
+  bitrate_list *prev = NULL;
+  while (bl != NULL) {
+    prev = bl;
+    if (bl->bitrate > tpt) break;
+    bl = bl->next;
+  }
+  if (prev != NULL) return prev->bitrate;
+  else return 0;
+}
+
+/**
  * Gets a list of bitrates from an xml file.
  *
  * @param[in] buf       The buffer.
