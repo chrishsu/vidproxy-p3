@@ -17,7 +17,7 @@ int main() {
   char *xml = "<media bitrate=\"200\"> \
               <media bitrate=\"400\"> \
               <media bitrate=\"800\"> \
-              <media bitrate=\"1400\">";
+              <media bitrate=\"1000\">";
   
   printf("parse_xml:\n");
   bitrate_list *bl = parse_xml(xml, 0);
@@ -25,12 +25,12 @@ int main() {
   
   printf("select [%d]: %d\n", 0,
          bitrate_list_select(bl, 0));
-  printf("select [%d]: %d\n", 200,
-         bitrate_list_select(bl, 200));
+  printf("select [%d]: %d\n", 300,
+         bitrate_list_select(bl, 300));
   printf("select [%d]: %d\n", 700,
          bitrate_list_select(bl, 700));
-  printf("select [%d]: %d\n", 1600,
-         bitrate_list_select(bl, 1600));
+  printf("select [%d]: %d\n", 1500,
+         bitrate_list_select(bl, 1500));
   
   printf("All tests passed!\n");
   return 0;

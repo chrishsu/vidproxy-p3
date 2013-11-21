@@ -7,7 +7,7 @@
 
 typedef struct {
   int cur_bitrate;
-  int throughput;
+  float throughput;
   request *cur_request;
 } stream;
 

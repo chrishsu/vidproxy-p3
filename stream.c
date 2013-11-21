@@ -10,7 +10,7 @@
 stream *stream_init(int br) {
   stream *s = malloc(sizeof(stream));
   s->cur_bitrate = 0;
-  s->throughput = 0;
+  s->throughput = 0.0;
   s->cur_request = NULL;
   return s;
 }
@@ -52,7 +52,7 @@ void stream_calc_throughput(stream *s, float alpha) {
   if (s == NULL) return;
   if (s->cur_request == NULL) return;
   int diff = (int)(s->cur_request->end - s->cur_request->start);
-  int t_new = s->cur_request->chunksize/diff;
+  float t_new = s->cur_request->chunksize/diff;
   int t_cur = (alpha * t_new) + ((1 - alpha) * s->throughput);
   s->throughput = t_cur;
 }

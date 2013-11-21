@@ -43,7 +43,7 @@ void bitrate_list_free(bitrate_list *bl) {
 int bitrate_list_select(bitrate_list *bl, int tpt) {
   bitrate_list *prev = bl;
   while (bl != NULL) {
-    if ( tpt < bl->bitrate) break;
+    if ( tpt < 1.5*(float)bl->bitrate) break;
     prev = bl;
     bl = bl->next;
   }
