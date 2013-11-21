@@ -12,13 +12,15 @@ int main() {
   log_init(filename);
 
   r = request_init(100, 1, 1);
-  request_complete(r, 15000);
+  r->chunksize = 15000;
+  request_complete(r);
   log_print(r, 10.0, "1.0.0.1");
   request_free(r);
 
 
   r = request_init(100, 1, 2);
-  request_complete(r, 17000);
+  r->chunksize = 17000;
+  request_complete(r);
   log_print(r, 100.5, "1.0.0.1");
   request_free(r);
 
