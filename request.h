@@ -15,10 +15,11 @@ typedef struct {
   float throughput;
   int seq_num;
   int frag_num;
+  int chunksize;
 } request;
 
 request *request_init(int br, int seq, int frag);
-void request_complete(request *r, int chunksize);
+void request_complete(request *r);
 void request_free(request *r);
 
 #endif

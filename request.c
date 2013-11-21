@@ -17,6 +17,7 @@ request *request_init(int br, int seq, int frag) {
   r->throughput = 0.0;
   r->seq_num = seq;
   r->frag_num = frag;
+  r->chunksize = 0;
   return r;
 }
 
@@ -26,12 +27,12 @@ request *request_init(int br, int seq, int frag) {
  * @param[out] r         The request.
  * @param[in] chunksize  The size of the chunk.
  */
-void request_complete(request *r, int chunksize) {
+void request_complete(request *r) {
   if (r == NULL) return;
   r->end = time(NULL);
   int diff = (int)(r->end - r->start);
   if (diff == 0) diff = 1; // Don't divide by zero.
-  r->throughput = chunksize/diff;
+  r->throughput = r->chunksize/diff;
 }
 
 /**

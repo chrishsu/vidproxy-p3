@@ -32,14 +32,25 @@ void stream_add_request(stream *s, request *r) {
 }
 
 /**
+ * Adds a chunksize the request.
+ *
+ * @param[out] s         The stream.
+ * @param[in] chunksize  The size of the chunk.
+ */
+void stream_request_chunksize(stream *s, int chunksize) {
+  if (s == NULL) return;
+  s->cur_request->chunksize = chunksize;
+}
+
+/**
  * Completes the request.
  *
  * @param[out] s         The stream.
  * @param[in] chunksize  The size of the chunk.
  */
-void stream_request_complete(stream *s, int chunksize) {
+void stream_request_complete(stream *s) {
   if (s == NULL) return;
-  request_complete(s->cur_request, chunksize);
+  request_complete(s->cur_request);
 }
 
 /**

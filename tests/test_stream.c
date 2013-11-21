@@ -17,7 +17,8 @@ int main() {
   /* Add first request */
   stream_add_request(s, request_init(s->cur_bitrate, 1, 1));
   sleep(1);
-  stream_request_complete(s, 15000);
+  stream_request_chunksize(s, 15000);
+  stream_request_complete(s);
   diff = (int)(s->cur_request->end - s->cur_request->start);
   throughput = 15000/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
@@ -31,7 +32,8 @@ int main() {
   /* Add another request */
   stream_add_request(s, request_init(s->cur_bitrate, 1, 2));
   sleep(1);
-  stream_request_complete(s, 15000);
+  stream_request_chunksize(s, 15000);
+  stream_request_complete(s);
   diff = (int)(s->cur_request->end - s->cur_request->start);
   throughput = 15000/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
