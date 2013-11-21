@@ -19,7 +19,7 @@ clean:
 
 tests: tests/test_parse_utils.o tests/test_stream.o tests/test_bitrate_select.o tests/test_logging.o
 
-test_logging: test_logging.o log.o request.o
+test_logging: test_logging.o log.o stream.o request.o
 
 test_bitrate_select: test_bitrate_select.o parse_utils.o
 

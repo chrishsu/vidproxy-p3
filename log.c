@@ -18,10 +18,13 @@ void log_init(char *filename) {
  * @param[in] client_ip  The client IP request was from.
  */
 void log_print(stream *s, char *client_ip) {
-  if (vp_log_file == NULL || r == NULL) return;
-  FILE *fp = fopen(vp_log_file, "a");
+  if (vp_log_file == NULL || s == NULL) return;
 
   request *r = s->cur_request;
+  if (r == NULL) return;
+
+  FILE *fp = fopen(vp_log_file, "a");
+
   // Current Time, Duration, Throughput
   // Avg Throughput, Bitrate, Client IP
   // Chunkname
