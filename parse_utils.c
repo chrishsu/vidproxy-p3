@@ -33,6 +33,7 @@ void bitrate_list_free(bitrate_list *bl) {
 
 /**
  * Gets the highest bitrate below the throughput.
+ * Assumes that the bitrate list is in increasing order.
  *
  * @param[in] bl   The original bitrate list.
  * @param[in] tpt  The throughput.
@@ -40,10 +41,10 @@ void bitrate_list_free(bitrate_list *bl) {
  * @return The selected bitrate or 0 if the list was empty.
  */
 int bitrate_list_select(bitrate_list *bl, int tpt) {
-  bitrate_list *prev = NULL;
+  bitrate_list *prev = bl;
   while (bl != NULL) {
+    if ( tpt < bl->bitrate) break;
     prev = bl;
-    if (bl->bitrate > tpt) break;
     bl = bl->next;
   }
   if (prev != NULL) return prev->bitrate;
