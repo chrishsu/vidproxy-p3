@@ -5,22 +5,25 @@
 
 int main() {
   char *filename = "tests/test.log";
-  request *r;
+  stream *s;
 
   printf("testing log..\n\n");
 
   log_init(filename);
+  s = stream_init(200);
 
-  r = request_init(100, 1, 1);
-  request_complete(r, 15000);
-  log_print(r, 10.0, "1.0.0.1");
-  request_free(r);
+  stream_add_request(s, request_init(100, 1, 1));
+  stream_request_chunksize(s, 15000);
+  stream_request_complete(s);
+  log_print(s, "1.0.0.1");
 
 
-  r = request_init(100, 1, 2);
-  request_complete(r, 17000);
-  log_print(r, 100.5, "1.0.0.1");
-  request_free(r);
+  stream_add_request(s, request_init(100, 1, 2));
+  stream_request_chunksize(s, 17000);
+  stream_request_complete(s);
+  log_print(s, "1.0.0.1");
+  
+  stream_free(s);
 
   printf("passed all tests!\n");
 
