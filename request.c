@@ -13,12 +13,14 @@ request *request_init(int br) {
   r->start = time(NULL);
   r->end = 0;
   r->bitrate = br;
-  r->chunksize = 0;
+  r->throughtput = 0.0;
+  r->seq_num = 0;
+  r->frag_num = 0;
   return r;
 }
 
 /**
- * Completes the request.
+ * Completes the request. Calculates the throughput.
  *
  * @param[out] r         The request.
  * @param[in] chunksize  The size of the chunk.
@@ -26,7 +28,8 @@ request *request_init(int br) {
 void request_complete(request *r, int chunksize) {
   if (r == NULL) return;
   r->end = time(NULL);
-  r->chunksize = chunksize;
+  int diff = (int)(r->end - r->start);
+  r->throughput = chunksize/diff;
 }
 
 /**

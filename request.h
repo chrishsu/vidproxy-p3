@@ -12,10 +12,12 @@ typedef struct {
   time_t start;
   time_t end;
   int bitrate;
-  int chunksize;
+  float throughput;
+  int seq_num;
+  int frag_num;
 } request;
 
-request *request_init(int br);
+request *request_init(int br, int seq, int frag);
 void request_complete(request *r, int chunksize);
 void request_free(request *r);
 

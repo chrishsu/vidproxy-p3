@@ -51,8 +51,7 @@ void stream_request_complete(stream *s, int chunksize) {
 void stream_calc_throughput(stream *s, float alpha) {
   if (s == NULL) return;
   if (s->cur_request == NULL) return;
-  int diff = (int)(s->cur_request->end - s->cur_request->start);
-  float t_new = s->cur_request->chunksize/diff;
+  float t_new = s->cur_request->throughput;
   int t_cur = (alpha * t_new) + ((1 - alpha) * s->throughput);
   s->throughput = t_cur;
 }
