@@ -23,10 +23,10 @@ int main() {
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 1..\n");
   printf("diff: %d\n", diff);
-  printf("throughput: %g\n", throughput);
-  printf("new throughput: %g\n", updated_t);
+  printf("throughput: %f\n", throughput);
+  printf("new throughput: %f\n", updated_t);
   stream_calc_throughput(s, ALPHA);
-  printf("calc throughput: %g\n\n", s->throughput);
+  printf("calc throughput: %f\n\n", s->throughput);
 
   /* Add another request */
   stream_add_request(s, request_init(s->cur_bitrate));
@@ -37,10 +37,10 @@ int main() {
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 2..\n");
   printf("diff: %d\n", diff);
-  printf("throughput: %g\n", throughput);
-  printf("new throughput: %g\n", updated_t);
+  printf("throughput: %f\n", throughput);
+  printf("new throughput: %f\n", updated_t);
   stream_calc_throughput(s, ALPHA);
-  printf("calc throughput: %g\n\n", s->throughput);
+  printf("calc throughput: %f\n\n", s->throughput);
 
   stream_free(s);
 

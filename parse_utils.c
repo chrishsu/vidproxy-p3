@@ -40,7 +40,7 @@ void bitrate_list_free(bitrate_list *bl) {
  *
  * @return The selected bitrate or 0 if the list was empty.
  */
-int bitrate_list_select(bitrate_list *bl, int tpt) {
+int bitrate_list_select(bitrate_list *bl, float tpt) {
   bitrate_list *prev = bl;
   while (bl != NULL) {
     if ( tpt < 1.5*(float)bl->bitrate) break;

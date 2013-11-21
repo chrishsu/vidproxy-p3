@@ -13,25 +13,27 @@ void print_bitrate_list(bitrate_list *bl) {
 
 int main() {
   printf("bitrate_list tests..\n\n");
-  
+
   char *xml = "<media bitrate=\"200\"> \
               <media bitrate=\"400\"> \
               <media bitrate=\"800\"> \
               <media bitrate=\"1000\">";
-  
+
   printf("parse_xml:\n");
   bitrate_list *bl = parse_xml(xml, 0);
   print_bitrate_list(bl);
-  
-  printf("select [%d]: %d\n", 0,
-         bitrate_list_select(bl, 0));
-  printf("select [%d]: %d\n", 300,
-         bitrate_list_select(bl, 300));
-  printf("select [%d]: %d\n", 700,
-         bitrate_list_select(bl, 700));
-  printf("select [%d]: %d\n", 1500,
-         bitrate_list_select(bl, 1500));
-  
-  printf("All tests passed!\n");
+
+  float tests[8] = { 0.0, 300.0, 700.0, 1199.0, 1199.9999,
+		     1200.0001, 1201.0, 1600.0 };
+
+  int i;
+  for (i = 0; i < 8; i++) {
+    printf("select [%f]: %d\n", tests[i],
+           bitrate_list_select(bl, tests[i]));
+  }
+
+  bitrate_list_free(bl);
+
+  printf("\nAll tests passed!\n");
   return 0;
 }
