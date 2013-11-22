@@ -24,7 +24,7 @@ request *request_init(int br, int seq, int frag) {
  * Completes the request. Calculates the throughput (in Kbits).
  *
  * @param[out] r         The request.
- * @param[in] chunksize  The size of the chunk.
+ * @param[in] chunksize  The size of the chunk (bytes).
  */
 void request_complete(request *r) {
   if (r == NULL) return;
@@ -33,7 +33,7 @@ void request_complete(request *r) {
   (0.000001 * (r->end.tv_usec - r->start.tv_usec));
   if (diff == 0) diff = 1; // Don't divide by zero.
   r->time_diff = diff;
-  r->throughput = (r->chunksize/diff)/1000;
+  r->throughput = ((r->chunksize/diff)/1000)*8;
   printf("tpt: %f\tchunksize: %d\tdiff: %f\n",
          r->throughput, r->chunksize, r->time_diff);
 }
