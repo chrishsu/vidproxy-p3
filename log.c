@@ -28,8 +28,8 @@ void log_print(stream *s, char *client_ip) {
   // Current Time, Duration, Throughput
   // Avg Throughput, Bitrate, Client IP
   // Chunkname
-  fprintf(fp, "%d %d %f %f %d %s /vod/%dSeq%d-Frag%d\n",
-          (int)time(NULL), (int)(r->end - r->start), r->throughput,
+  fprintf(fp, "%d %f %f %f %d %s /vod/%dSeq%d-Frag%d\n",
+          (int)time(NULL), r->time_diff, r->throughput,
           s->throughput, r->bitrate, client_ip,
           r->bitrate, r->seq_num, r->frag_num);
 

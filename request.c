@@ -11,7 +11,7 @@
  */
 request *request_init(int br, int seq, int frag) {
   request *r = malloc(sizeof(request));
-  gettimeofday(r->start, NULL);
+  gettimeofday(&r->start, NULL);
   r->bitrate = br;
   r->throughput = 0.0;
   r->seq_num = seq;
@@ -28,11 +28,14 @@ request *request_init(int br, int seq, int frag) {
  */
 void request_complete(request *r) {
   if (r == NULL) return;
-  gettimeofday(r->end, NULL);
+  gettimeofday(&r->end, NULL);
   float diff = (r->end.tv_sec - r->start.tv_sec) +
   (0.000001 * (r->end.tv_usec - r->start.tv_usec));
   if (diff == 0) diff = 1; // Don't divide by zero.
+  r->time_diff = diff;
   r->throughput = r->chunksize/diff;
+  printf("tpt: %f\tchunksize: %d\tdiff: %f\n",
+         r->throughput, r->chunksize, r->time_diff);
 }
 
 /**
