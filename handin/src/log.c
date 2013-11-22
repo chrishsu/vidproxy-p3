@@ -9,6 +9,8 @@ char *vp_log_file;
  */
 void log_init(char *filename) {
   vp_log_file = filename;
+  FILE *fp = fopen(vp_log_file, "w");
+  fclose(fp);
 }
 
 /**
