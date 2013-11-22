@@ -3,14 +3,14 @@
 #define VP_REQUEST
 
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define IP_LEN  16
 #define CHUNKNAME_LEN 256
 
 typedef struct {
-  time_t start;
-  time_t end;
+  struct timeval start;
+  struct timeval end;
   int bitrate;
   float throughput;
   int seq_num;
