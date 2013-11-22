@@ -135,16 +135,18 @@ int parse_uri(char *buf, int buf_size,
  */
 int replace_uri(char *buf, int *buf_size, int br) {
   //if (buf_size < 21) return 0;
-  
-  *buf_size += 10;
-  char *newbuf = malloc(*buf_size);
-  int leftover, seg_num, frag_num;
-  leftover = 0; seg_num = 0; frag_num = 0;
-  if (sscanf(buf, "GET /vod/%*dSeg%d-Frag%d %n",
-	    &seg_num, &frag_num, &leftover) < 2) {
+  int bitrate, leftover, seg_num, frag_num;
+  bitrate = 0; leftover = 0; seg_num = 0; frag_num = 0;
+  if (sscanf(buf, "GET /vod/%dSeg%d-Frag%d %n",
+	    &bitrate, &seg_num, &frag_num, &leftover) < 2) {
     return 0;
   }
 
+  printf("Old size: %d\t", buf_size);
+  *buf_size += floor(log10(br)) - floor(log10(bitrate));
+  printf("New Size: %d\n", buf_size);
+  char *newbuf = malloc(*buf_size);
+  
   sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
           br, seg_num, frag_num, buf+leftover);
 
