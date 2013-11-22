@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../stream.h"
-#include "../request.h"
+#include "../src/stream.h"
+#include "../src/request.h"
 
 #define ALPHA .1
 

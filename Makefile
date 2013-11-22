@@ -8,7 +8,9 @@ TESTBINS = test_parse_utils test_stream test_bitrate_select test_logging
 
 # Explicit build targets
 
-all: proxy tests ${TESTBINS}
+all: proxy src tests ${TESTBINS}
+
+src: src/proxy.o src/parse_utils.o src/stream.o src/request.o src/log.o
 
 proxy: proxy.o parse_utils.o stream.o request.o log.o
 

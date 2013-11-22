@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../log.h"
+#include "../src/log.h"
 
 int main() {
   char *filename = "tests/test.log";

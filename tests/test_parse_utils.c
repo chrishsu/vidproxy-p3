@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "../parse_utils.h"
+#include "../src/parse_utils.h"
 
 void print_bitrate_list(bitrate_list *bl) {
   printf("Bitrates:\t");
