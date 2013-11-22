@@ -38,8 +38,14 @@ void stream_add_request(stream *s, request *r) {
  * @param[in] chunksize  The size of the chunk.
  */
 void stream_request_chunksize(stream *s, int chunksize) {
-  if (s == NULL) return;
-  if (s->cur_request == NULL) return;
+  if (s == NULL) {
+    fprintf(stderr, "stream_request_chunksize s is NULL!\n");
+    return;
+  }
+  if (s->cur_request == NULL) {
+    fprintf(stderr, "stream_request_chunksize request is NULL!\n");
+    return;
+  }
   printf("Setting chunksize: %d!!!\n", chunksize);
   s->cur_request->chunksize = chunksize;
 }
