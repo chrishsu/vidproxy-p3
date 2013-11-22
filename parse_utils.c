@@ -110,7 +110,7 @@ int parse_headers(char *buf, int buf_size, int *len) {
  * @param[in] buf       The buffer.
  * @param[in] buf_size  The buffer size.
  * @param[out] br       The bitrate.
- * @param[out] seq      The sequence number.
+ * @param[out] seq      The segment number.
  * @param[out] frag     The fragment number.
  *
  * @return 1 on success, 0 on failure.
@@ -118,7 +118,7 @@ int parse_headers(char *buf, int buf_size, int *len) {
 int parse_uri(char *buf, int buf_size,
               int *br, int *seq, int *frag) {
   if (buf_size < 20) return 0;
-  if (sscanf(buf, "GET /vod/%dSeq%d-Frag%d", br, seq, frag) < 3) {
+  if (sscanf(buf, "GET /vod/%dSeg%d-Frag%d", br, seq, frag) < 3) {
     return 0;
   }
   return 1;
@@ -138,12 +138,12 @@ int replace_uri(char *buf, int buf_size, int br) {
   char *newbuf = malloc(buf_size + (br/10) + 1);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
-  if (sscanf(buf, "GET /vod/%*dSeq%d-Frag%d %n",
+  if (sscanf(buf, "GET /vod/%*dSeg%d-Frag%d %n",
 	    &seg_num, &frag_num, &leftover) < 2) {
     return 0;
   }
 
-  sprintf(newbuf, "GET /vod/%dSeq%d-Frag%d %s",
+  sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
           br, seg_num, frag_num, buf+leftover);
 
   memcpy(buf, newbuf, buf_size + (br/10) + 1);
