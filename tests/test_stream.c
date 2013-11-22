@@ -19,7 +19,7 @@ int main() {
   sleep(1);
   stream_request_chunksize(s, 15000);
   stream_request_complete(s);
-  diff = (int)(s->cur_request->end - s->cur_request->start);
+  diff = (int)(s->cur_request->end.tv_sec - s->cur_request->start.tv_sec);
   throughput = 15000/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 1..\n");
@@ -34,7 +34,7 @@ int main() {
   sleep(1);
   stream_request_chunksize(s, 15000);
   stream_request_complete(s);
-  diff = (int)(s->cur_request->end - s->cur_request->start);
+  diff = (int)(s->cur_request->end.tv_sec - s->cur_request->start.tv_sec);
   throughput = 15000/diff;
   updated_t = (ALPHA * throughput) + (1 - ALPHA) * s->throughput;
   printf("request 2..\n");
