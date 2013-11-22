@@ -133,9 +133,11 @@ int parse_uri(char *buf, int buf_size,
  *
  * @return 1 on success, 0 on failure.
  */
-int replace_uri(char *buf, int buf_size, int br) {
+int replace_uri(char *buf, int *buf_size, int br) {
   //if (buf_size < 21) return 0;
-  char *newbuf = malloc(buf_size + (br/10) + 1);
+  
+  *buf_size += 10;
+  char *newbuf = malloc(*buf_size);
   int leftover, seg_num, frag_num;
   leftover = 0; seg_num = 0; frag_num = 0;
   if (sscanf(buf, "GET /vod/%*dSeg%d-Frag%d %n",
@@ -146,8 +148,9 @@ int replace_uri(char *buf, int buf_size, int br) {
   sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
           br, seg_num, frag_num, buf+leftover);
 
-  memcpy(buf, newbuf, buf_size + (br/10) + 1);
+  memcpy(buf, newbuf, *buf_size);
   free(newbuf);
+  
   return 1;
 }
 
