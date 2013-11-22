@@ -39,6 +39,7 @@ void stream_add_request(stream *s, request *r) {
  */
 void stream_request_chunksize(stream *s, int chunksize) {
   if (s == NULL) return;
+  if (s->cur_request == NULL) return;
   s->cur_request->chunksize = chunksize;
 }
 
