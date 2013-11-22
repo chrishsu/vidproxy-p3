@@ -3,6 +3,7 @@
 #define VP_STREAM
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "request.h"
 
 typedef struct {
