@@ -137,8 +137,9 @@ int replace_uri(char *buf, int *buf_size, int br) {
   //if (buf_size < 21) return 0;
   int bitrate, leftover, seg_num, frag_num;
   bitrate = 0; leftover = 0; seg_num = 0; frag_num = 0;
+  printf("Replace Uri..\n");
   if (sscanf(buf, "GET /vod/%dSeg%d-Frag%d %n",
-	    &bitrate, &seg_num, &frag_num, &leftover) < 2) {
+	    &bitrate, &seg_num, &frag_num, &leftover) < 3) {
     return 0;
   }
 
