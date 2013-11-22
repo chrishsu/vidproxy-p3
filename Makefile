@@ -10,7 +10,7 @@ TESTBINS = test_parse_utils test_stream test_bitrate_select test_logging
 
 all: proxy tests ${TESTBINS}
 
-proxy: proxy.o
+proxy: proxy.o parse_utils.o stream.o request.o log.o
 
 clean:
 	rm -f *.o proxy $(TESTBINS)
