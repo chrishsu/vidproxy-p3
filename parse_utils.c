@@ -124,6 +124,12 @@ int parse_uri(char *buf, int buf_size,
   return 1;
 }
 
+int bitrate_length(int num) {
+  char str[10] = 0;
+  sprintf(str, "%d", num);
+  return strlen(str);
+}
+
 /**
  * Replaces the uri with the new bitrate.
  *
@@ -143,9 +149,9 @@ int replace_uri(char *buf, int *buf_size, int br) {
     return 0;
   }
 
-  printf("Old size: %d\t", buf_size);
-  *buf_size += floor(log10(br)) - floor(log10(bitrate));
-  printf("New Size: %d\n", buf_size);
+  printf("Old size: %d\t", *buf_size);
+  *buf_size += bitrate_length(bitrate) - bitrate_length(br);
+  printf("New Size: %d\n", *buf_size);
   char *newbuf = malloc(*buf_size);
   
   sprintf(newbuf, "GET /vod/%dSeg%d-Frag%d %s",
