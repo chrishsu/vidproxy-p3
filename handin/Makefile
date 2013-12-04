@@ -1,5 +1,7 @@
 # Variables
-TESTBINS = test_parse_utils test_stream test_bitrate_select test_logging
+PROXY_TESTS = test_parse_utils test_stream test_bitrate_select test_proxy_logging
+DNS_TESTS = 
+TESTBINS = PROXY_TESTS DNS_TESTS
 
 # Implicit .o target
 
@@ -8,20 +10,23 @@ TESTBINS = test_parse_utils test_stream test_bitrate_select test_logging
 
 # Explicit build targets
 
-all: src proxy tests ${TESTBINS}
+all: src_proxy proxy tests ${TESTBINS}
 
-src: src/proxy.o src/parse_utils.o src/stream.o src/request.o src/log.o
+proxy_log.o: src/proxy/log.o
+dns_log.o: src/dns/log.o
 
-proxy: proxy.o parse_utils.o stream.o request.o log.o
+src_proxy: src/proxy/proxy.o src/proxy/parse_utils.o src/proxy/stream.o src/proxy/request.o
+
+proxy: proxy.o parse_utils.o stream.o request.o proxy_log.o
 
 clean:
 	rm -f *.o proxy $(TESTBINS)
 
 # Testing
 
-tests: tests/test_parse_utils.o tests/test_stream.o tests/test_bitrate_select.o tests/test_logging.o
+tests: tests/test_parse_utils.o tests/test_stream.o tests/test_bitrate_select.o tests/test_proxy_logging.o
 
-test_logging: test_logging.o log.o stream.o request.o
+test_proxy_logging: test_proxy_logging.o proxy_log.o stream.o request.o
 
 test_bitrate_select: test_bitrate_select.o parse_utils.o
 
