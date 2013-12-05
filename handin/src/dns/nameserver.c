@@ -58,8 +58,8 @@ void send_udp(int sock, char *buf, int len, struct sockaddr_in *dest) {
 void send_error_udp(int sock, struct sockaddr_in *dest, byte rcode) {
   dns_header *dh = dns_create_header(IS_ERROR, rcode);
 
-  char *buf;
-  int buflen = dns_make_buf(dh, NULL, NULL, buf);
+  int buflen;
+  char *buf = dns_make_buf(dh, NULL, NULL, &buflen);
 
   send_udp(sock, buf, buflen, dest);
 
@@ -82,8 +82,8 @@ void send_valid_udp(int sock, struct sockaddr_in * dest, char *name) {
   dns_header *dh = dns_create_header(IS_RESPONSE, R_OK);
   dns_answer *da = dns_create_answer(server_ip);
 
-  char *buf;
-  int buflen = dns_make_buf(dh, NULL, da, buf);
+  int buflen;
+  char *buf = dns_make_buf(dh, NULL, da, &buflen);
 
   send_udp(sock, buf, buflen, dest);
 

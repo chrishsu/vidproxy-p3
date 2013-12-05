@@ -118,10 +118,11 @@ dns_answer *dns_create_answer(int ip) {
   return da;
 }
 
-int dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, char *buf) {
+char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen) {
   if (dh == NULL) return 0;
   
-  int buflen = sizeof(dns_header);
+  char *buf;
+  buflen = sizeof(dns_header);
   int variance = sizeof(byte *) + sizeof(int);
   
   if (dq != NULL) {
@@ -146,5 +147,5 @@ int dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, char *buf) {
     mempcy(buf + delta, da + variance, sizeof(dns_answer) - variance);
   }
   
-  return 1;
+  return buf;
 }

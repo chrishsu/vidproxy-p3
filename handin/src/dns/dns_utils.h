@@ -58,6 +58,6 @@ int dns_is_valid(dns_header *dh, dns_question *dq);
 dns_header *dns_create_header(short qr, byte rcode);
 dns_question *dns_create_question();
 dns_answer *dns_create_answer(int ip);
-int dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, char *buf);
+char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen);
 
 #endif
