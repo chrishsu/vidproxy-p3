@@ -11,14 +11,13 @@
 #include "roundrobin.h"
 
 #define MAX_FILENAME 128
-#define IP_STRING_MAX 16
 #define MAX_UDP_BUF 512
 
 typedef char flag;
 
 flag roundrobin;
 char logfile[MAX_FILENAME];
-char listen_ip[IP_STRING_MAX];
+char listen_ip[INET_ADDRSTRLEN];
 int listen_port;
 char servers_file[MAX_FILENAME];
 char lsas_file[MAX_FILENAME];
@@ -54,8 +53,8 @@ void send_udp(int sock, char *buf, int len, struct sockaddr_in *dest) {
   }
 }
 
-void send_error_udp(int sock, sockaddr_in *dest) {
-  dns_header *dh = dns_create_header(IS_ERROR);
+void send_error_udp(int sock, struct sockaddr_in *dest, byte rcode) {
+  dns_header *dh = dns_create_header(IS_ERROR, rcode);
   
   char *buf;
   int buflen = dns_make_buf(dh, NULL, NULL, buf);
@@ -66,8 +65,8 @@ void send_error_udp(int sock, sockaddr_in *dest) {
   free(buf);
 }
 
-void send_valid_udp(int sock, sockaddr_in * dest) {
-  char ip[IP_STRING_MAX];
+void send_valid_udp(int sock, struct sockaddr_in * dest, char *name) {
+  char ip[INET_ADDRSTRLEN];
   int server_ip;
   
   if (roundrobin) {
@@ -78,13 +77,17 @@ void send_valid_udp(int sock, sockaddr_in * dest) {
   
   inet_pton(AF_INET, ip, &server_ip);
   
-  dns_header *dh = dns_create_header(IS_RESPONSE);
+  dns_header *dh = dns_create_header(IS_RESPONSE, R_OK);
   dns_answer *da = dns_create_answer(server_ip);
   
   char *buf;
   int buflen = dns_make_buf(dh, NULL, da, buf);
   
   send_udp(sock, buf, buflen, dest);
+  
+  char client_ip[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &(dest->sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
+  log_print(client_ip , name, ip);
   
   free(da);
   free(dh);
@@ -109,12 +112,24 @@ void process_udp(int sock) {
   
   dns_header dh;
   dns_process_header(buf, &dh);
+  
+  if (ntohs(dh->qdcount) != 1) {
+    send_error_udp(sock, &from, R_FORMAT);
+    return;
+  }
+  
   dns_question dq;
   dns_process_query(buf + sizeof(dns_header), &dq);
   if (dns_is_valid(&dh, &dq)) {
-    send_valid_udp(sock);
+    char *name = dns_query_name(dq);
+    if (strcmp("video.cs.cmu.edu", name) == 0) {
+      send_valid_udp(sock, &from, name);
+    } else {
+      send_error_udp(sock, &from, R_NAME);
+    }
+    free(name);
   } else {
-    send_error_udp(sock);
+    send_error_udp(sock, &from, R_FORMAT);
   }
 }
 

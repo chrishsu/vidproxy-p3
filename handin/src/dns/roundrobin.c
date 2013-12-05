@@ -5,6 +5,8 @@ server_loop *servers;
 
 /**
  * Parse the file for server ip's.
+ *
+ * @param[in] filename  The name of the server file.
  */
 void rr_parse_servers(char *filename) {
   servers = NULL;

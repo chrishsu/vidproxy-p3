@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../src/stream.h"
-#include "../src/request.h"
+#include "../src/proxy/stream.h"
+#include "../src/proxy/request.h"
 
 #define ALPHA .1
 
