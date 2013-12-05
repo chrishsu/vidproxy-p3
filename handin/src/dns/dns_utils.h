@@ -12,8 +12,8 @@
 #define QR_RESPONSE   128 // 1000 0000
 #define AA_QUERY      0   // 0000 0000
 #define AA_RESPONSE   8   // 0000 1000
-#define DNS_QUERY     QR_QUERY & AA_QUERY
-#define DNS_RESPONSE  QR_RESPONSE & AA_RESPONSE
+#define DNS_QUERY     (QR_QUERY & AA_QUERY)
+#define DNS_RESPONSE  (QR_RESPONSE & AA_RESPONSE)
 
 // Response codes
 #define R_OK      0 // No error
