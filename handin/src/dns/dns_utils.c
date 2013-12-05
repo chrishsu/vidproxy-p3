@@ -1,10 +1,16 @@
 #include "dns_utils.h"
 
+/**
+ * Takes a byte array and makes it into a header.
+ */
 int dns_process_header(char *b, dns_header *dh) {
   memcpy(dh, b, sizeof(dns_header));
   return 1;
 }
 
+/**
+ * Calculates the length of the name.
+ */
 int name_length(char *b, short len) {
   int i;
   for (i = 0; i < len; i++) {
@@ -13,6 +19,9 @@ int name_length(char *b, short len) {
   return i+1;
 }
 
+/**
+ * Takes a byte array and makes it into a question.
+ */
 int dns_process_query(char *b, short len, dns_question *dq) {
   int namelen = name_length(b, len);
   dq->namelen = namelen;
@@ -25,6 +34,9 @@ int dns_process_query(char *b, short len, dns_question *dq) {
   return 1;
 }
 
+/**
+ * Takes a byte array and makes it into an answer.
+ */
 int dns_process_answer(char *b, short len, dns_answer *da) {
   int namelen = name_length(b, len);
   da->namelen = namelen;
@@ -36,6 +48,9 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
   return 1;
 }
 
+/**
+ * Returns the name from a question.
+ */
 char *dns_query_name(dns_question *dq) {
   if (dq == NULL) return NULL;
   char *name = malloc(dq->namelen - 1);
@@ -60,10 +75,26 @@ char *dns_query_name(dns_question *dq) {
   return name;
 }
 
+/**
+ * Checks if a header and question are valid.
+ */
 int dns_is_valid(dns_header *dh, dns_question *dq) {
+  if (dh == NULL || dq == NULL) return 0;
+  if (dh->type != DNS_QUERY) {
+    return 0;
+  }
+  if (dh->rcode != R_OK) {
+    return 0;
+  }
+  if (ntohs(dh->qdcount) != 1 && ntohs(dh->ancount) != 0) {
+    return 0;
+  }
   return 1;
 }
 
+/**
+ * Creates a DNS header.
+ */
 dns_header *dns_create_header(short qr, byte rcode) {
   dns_header *dh = malloc(sizeof(dns_header));
 
@@ -88,12 +119,18 @@ dns_header *dns_create_header(short qr, byte rcode) {
 #define NAME "5video2cs3cmu3edu0"
 #define NAME_LEN 18
 
+/**
+ * Creates a name.
+ */
 byte *create_name() {
   byte *b = malloc(NAME_LEN);
   memcpy(b, NAME, NAME_LEN);
   return b;
 }
 
+/**
+ * Creates a DNS question.
+ */
 dns_question *dns_create_question() {
   dns_question *dq = malloc(sizeof(dns_question));
 
@@ -105,6 +142,9 @@ dns_question *dns_create_question() {
   return dq;
 }
 
+/**
+ * Creates a DNS answer.
+ */
 dns_answer *dns_create_answer(int ip) {
   dns_answer *da = malloc(sizeof(dns_answer));
 
@@ -119,6 +159,14 @@ dns_answer *dns_create_answer(int ip) {
   return da;
 }
 
+/**
+ * Creates a buffer from various DNS header, question, or answer.
+ * Also keeps track of the total buffer length.
+ *
+ * @param[out] buflen  The resulting length of the buffer.
+ * 
+ * @return The buffer.
+ */
 char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen) {
   if (dh == NULL) return 0;
 
