@@ -35,12 +35,14 @@ typedef struct {
 
 typedef struct {
   byte *qname;
+  int   namelen;
   short qtype;  // set to 1 for requests
   short qclass; // set to 1 for requests
 } dns_question;
 
 typedef struct {
   byte *aname;
+  int   namelen;
   short atype;    // set to 1 for responses
   short aclass;   // set to 1 for responses
   int   ttl;      // set to 0
@@ -49,11 +51,11 @@ typedef struct {
 } dns_answer;
 
 int dns_process_header(char *b, dns_header *dh);
-int dns_process_query(char *b, dns_question *dq);
-int dns_process_answer(char *b, dns_question *dq);
+int dns_process_query(char *b, short len, dns_question *dq);
+int dns_process_answer(char *b, dns_answer *da);
 char *dns_query_name(dns_question *dq);
 int dns_is_valid(dns_header *dh, dns_question *dq);
-dns_header *dns_create_header(int qr, byte rcode);
+dns_header *dns_create_header(short qr, byte rcode);
 dns_question *dns_create_question();
 dns_answer *dns_create_answer(int ip);
 int dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, char *buf);
