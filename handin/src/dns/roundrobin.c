@@ -11,15 +11,15 @@ server_loop *servers;
 void rr_parse_servers(char *filename) {
   servers = NULL;
   FILE *fp = fopen(filename, "r");
-  
+
   server_loop *prev = NULL;
   server_loop *cur = NULL;
   char c; int idx = 0;
-  
+
   while ((c = fgetc(fp)) != EOF) {
     if (cur == NULL) {
       cur = malloc(sizeof(server_loop));
-      cur->ip = 0;
+      cur->ip[0] = 0;
       cur->next = NULL;
       // Connect the elements
       if (prev != NULL) {
@@ -30,21 +30,22 @@ void rr_parse_servers(char *filename) {
         servers = cur;
       }
     }
-    cur->ip[idx] = c;
-    if (c = '\n') {
+    if (c == '\n') {
+      cur->ip[idx] = 0;
       idx = 0;
       prev = cur;
       cur = NULL;
       continue;
     }
+    cur->ip[idx] = c;
     idx++;
   }
-  
+
   // Loop last element to start
   if (servers != NULL && prev != NULL) {
     prev->next = servers;
   }
-  
+
   fclose(fp);
 }
 
@@ -63,10 +64,21 @@ char *rr_next_server() {
  * Free the server loop.
  */
 void rr_free() {
-  while (servers != NULL) {
-    server_loop *tmp = servers;
-    servers = servers->next;
-    free(tmp);
-    tmp = NULL;
+  server_loop *tmp = servers->next;
+  server_loop *prev = servers;
+  int i = 0;
+  while (tmp != NULL) {
+    if (prev != servers) {
+      prev->next = NULL;
+      free(prev);
+    }
+    if (tmp == servers) {
+      free(tmp);
+      break;
+    }
+    prev = NULL;
+    prev = tmp;
+    tmp = tmp->next;
+    i++;
   }
 }

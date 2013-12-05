@@ -1,7 +1,7 @@
 # Variables
 PROXY_TESTS = tests_proxy test_parse_utils test_stream test_bitrate_select test_proxy_logging
 DNS_TESTS = tests_dns test_roundrobin
-TESTBINS = PROXY_TESTS DNS_TESTS
+TESTBINS = ${PROXY_TESTS} ${DNS_TESTS}
 
 # Implicit .o target
 
@@ -10,10 +10,12 @@ TESTBINS = PROXY_TESTS DNS_TESTS
 
 # Explicit build targets
 
-all: src_proxy proxy src_dns ${TESTBINS}
+all: logs src_proxy proxy src_dns ${TESTBINS}
 
-proxy_log.o: src/proxy/log.o
-dns_log.o: src/dns/log.o
+logs:
+	gcc -c -g -Wall src/proxy/log.c -o proxy_log.o
+	gcc -c -g -Wall src/dns/log.c -o dns_log.o
+
 
 src_proxy: src/proxy/proxy.o src/proxy/parse_utils.o src/proxy/stream.o src/proxy/request.o
 
