@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <netinet/in.h>
 
 // Query or Response
 #define QR_QUERY      0   // 0000 0000
@@ -11,7 +13,7 @@
 #define AA_QUERY      0   // 0000 0000
 #define AA_RESPONSE   8   // 0000 1000
 #define DNS_QUERY     QR_QUERY & AA_QUERY
-#define DNS_RESPONSE  QR_RESPONSE & AA_RESONSE
+#define DNS_RESPONSE  QR_RESPONSE & AA_RESPONSE
 
 // Response codes
 #define R_OK      0 // No error
@@ -52,7 +54,7 @@ typedef struct {
 
 int dns_process_header(char *b, dns_header *dh);
 int dns_process_query(char *b, short len, dns_question *dq);
-int dns_process_answer(char *b, dns_answer *da);
+int dns_process_answer(char *b, short len, dns_answer *da);
 char *dns_query_name(dns_question *dq);
 int dns_is_valid(dns_header *dh, dns_question *dq);
 dns_header *dns_create_header(short qr, byte rcode);
