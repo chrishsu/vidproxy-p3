@@ -119,7 +119,8 @@ void process_udp(int sock) {
   }
   
   dns_question dq;
-  dns_process_query(buf + sizeof(dns_header), &dq);
+  dns_process_query(buf + sizeof(dns_header),
+                    bytes_read - sizeof(dns_header), &dq);
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(dq);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
