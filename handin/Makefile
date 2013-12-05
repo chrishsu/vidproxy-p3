@@ -10,7 +10,7 @@ TESTBINS = ${PROXY_TESTS} ${DNS_TESTS}
 
 # Explicit build targets
 
-all: logs src_proxy proxy src_dns ${TESTBINS}
+all: logs src_proxy proxy src_dns nameserver ${TESTBINS}
 
 logs:
 	gcc -c -g -Wall src/proxy/log.c -o proxy_log.o
@@ -19,9 +19,11 @@ logs:
 
 src_proxy: src/proxy/proxy.o src/proxy/parse_utils.o src/proxy/stream.o src/proxy/request.o
 
-src_dns: src/dns/roundrobin.o
+src_dns: src/dns/nameserver.o src/dns/roundrobin.o
 
 proxy: proxy.o parse_utils.o stream.o request.o proxy_log.o
+
+nameserver: nameserver.o roundrobin.o dns_log.o
 
 clean:
 	rm -f *.o proxy $(TESTBINS)
