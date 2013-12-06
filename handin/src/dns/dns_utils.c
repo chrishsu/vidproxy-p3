@@ -93,27 +93,44 @@ int dns_is_valid(dns_header *dh, dns_question *dq) {
 }
 
 /**
- * Creates a DNS header.
+ * Edits the given DNS header.
  */
-dns_header *dns_create_header(short qr, byte rcode) {
-  dns_header *dh = malloc(sizeof(dns_header));
-
-  dh->id = 0;
-  dh->type = 0;
+void dns_edit_header(dns_header *dh, short qr, byte rcode) {
+  if (dh == NULL) return;
+  
   dh->rcode = rcode;
-  dh->qdcount = 0;
-  dh->ancount = 0;
-  dh->ignore = 0;
+  
   if (qr == IS_QUERY) {
     dh->type = DNS_QUERY;
     dh->qdcount = ntohs(1);
   }
   else if (qr == IS_RESPONSE) {
     dh->type = DNS_RESPONSE;
+    dh->qdcount = ntohs(1);
     dh->ancount = ntohs(1);
   }
+}
 
+/**
+ * Creates a DNS header.
+ */
+dns_header *dns_create_header(short qr, byte rcode) {
+  dns_header *dh = malloc(sizeof(dns_header));
+
+  dh->id = htons(15441);
+  dh->type = 0;
+  dh->qdcount = 0;
+  dh->ancount = 0;
+  dh->ignore = 0;
+  
+  dns_edit_header(dh, qr, rcode);
+  
   return dh;
+}
+
+void dns_edit_question(dns_question *dq) {
+  dq->qtype = 0;
+  dq->qclass = 0;
 }
 
 #define NAME "5video2cs3cmu3edu0"

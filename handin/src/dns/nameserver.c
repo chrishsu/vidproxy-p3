@@ -24,6 +24,10 @@ int listen_port;
 char servers_file[MAX_FILENAME];
 char lsas_file[MAX_FILENAME];
 
+/* Socket Global variables */
+int sock;
+struct sockaddr_in myaddr;
+
 int read_inputs(int argc, char **argv) {
   int idx = 0;
   roundrobin = 0;
@@ -48,29 +52,30 @@ void cleanup() {
   if (roundrobin) rr_free();
 }
 
-void send_udp(int sock, char *buf, int len, struct sockaddr_in *dest) {
-  int bytes_sent = sendto(sock, buf, len, 0, (struct sockaddr *)dest, sizeof(*(dest)));
+void send_udp(char *buf, int len) {
+  int bytes_sent = sendto(sock, buf, len, 0, &dest, sizeof(dest));
   if (bytes_sent < 0) {
     fprintf(stderr, "Error sending..\n");
   }
 }
 
-void send_error_udp(int sock, struct sockaddr_in *dest, byte rcode) {
-  dns_header *dh = dns_create_header(IS_ERROR, rcode);
+void send_error_udp(dns_header *dh, dns_question *dq) {
+  printf("sending error udp\n");
+  dns_edit_header(dh, IS_ERROR, rcode);
 
   int buflen;
-  char *buf = dns_make_buf(dh, NULL, NULL, &buflen);
+  char *buf = dns_make_buf(dh, dq, NULL, &buflen);
 
-  send_udp(sock, buf, buflen, dest);
+  send_udp(buf, buflen);
 
-  free(dh);
   free(buf);
 }
 
-void send_valid_udp(int sock, struct sockaddr_in * dest, char *name) {
+void send_valid_udp(dns_header *dh, dns_question *dq) {
   char *ip;
   int server_ip;
 
+  printf("sending valid udp\n");
   if (roundrobin) {
     ip = rr_next_server();
   } else {
@@ -79,31 +84,32 @@ void send_valid_udp(int sock, struct sockaddr_in * dest, char *name) {
 
   inet_pton(AF_INET, ip, &server_ip);
 
-  dns_header *dh = dns_create_header(IS_RESPONSE, R_OK);
+  dns_edit_header(dh, IS_RESPONSE, R_OK);
+  dns_edit_question(dq);
   dns_answer *da = dns_create_answer(server_ip);
 
   int buflen;
-  char *buf = dns_make_buf(dh, NULL, da, &buflen);
+  char *buf = dns_make_buf(dh, dq, da, &buflen);
 
-  send_udp(sock, buf, buflen, dest);
+  send_udp(buf, buflen);
 
   char client_ip[INET_ADDRSTRLEN];
   inet_ntop(AF_INET, &(dest->sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
   log_print(client_ip, name, ip);
 
   free(da);
-  free(dh);
   free(buf);
 }
 
 /**
  * Receives from the socket. If it is a valid header, calls send_udp.
  */
-void process_udp(int sock) {
+void process_udp() {
   struct sockaddr_in from;
   socklen_t fromlen;
   char buf[MAX_UDP_BUF];
 
+  printf("processing udp\n");
   short bytes_read = recvfrom(sock, buf, MAX_UDP_BUF, 0, (struct sockaddr *) &from, &fromlen);
 
   if (bytes_read <= 0 ||
@@ -116,7 +122,7 @@ void process_udp(int sock) {
   dns_process_header(buf, &dh);
 
   if (ntohs(dh.qdcount) != 1) {
-    send_error_udp(sock, &from, R_FORMAT);
+    send_error_udp(R_FORMAT);
     return;
   }
 
@@ -126,19 +132,17 @@ void process_udp(int sock) {
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(&dq);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
-      send_valid_udp(sock, &from, name);
+      send_valid_udp(dh, dq);
     } else {
-      send_error_udp(sock, &from, R_NAME);
+      send_error_udp(dh, dq, R_NAME);
     }
     free(name);
   } else {
-    send_error_udp(sock, &from, R_FORMAT);
+    send_error_udp(dh, dq, R_FORMAT);
   }
 }
 
 void select_loop() {
-  int sock;
-  struct sockaddr_in myaddr;
   fd_set readfds;
 
   if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP)) == -1) {
@@ -175,7 +179,7 @@ void select_loop() {
     }
 
     if (FD_ISSET(sock, &readfds)) {
-      process_udp(sock);
+      process_udp();
     }
   }
 }

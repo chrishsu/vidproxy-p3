@@ -16,7 +16,6 @@ logs:
 	gcc -c -g -Wall src/proxy/log.c -o proxy_log.o
 	gcc -c -g -Wall src/dns/log.c -o dns_log.o
 
-
 src_proxy: src/proxy/proxy.o src/proxy/parse_utils.o src/proxy/stream.o src/proxy/request.o
 
 src_dns: src/dns/nameserver.o src/dns/dns_utils.o src/dns/roundrobin.o
