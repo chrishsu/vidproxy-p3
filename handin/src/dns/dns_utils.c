@@ -62,6 +62,7 @@ char *dns_query_name(dns_question *dq) {
       sec_len = dq->qname[i];
       is_len = 0;
       len_count = 0;
+      if (i != 0) name[i-1] = '.';
     } else {
       name[i-1] = dq->qname[i];
       len_count++;

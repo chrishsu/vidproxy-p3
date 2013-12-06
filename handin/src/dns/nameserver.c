@@ -186,7 +186,6 @@ void select_loop() {
     if (FD_ISSET(sock, &readfds)) {
       process_udp();
     }
-    break;
   }
 }
 
