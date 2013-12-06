@@ -52,27 +52,29 @@ void cleanup() {
   if (roundrobin) rr_free();
 }
 
-void send_udp(char *buf, int len) {
+void send_udp(char *buf, int len, struct sockaddr_in *dest) {
   printf("udp sending %d bytes\n", len);
-  int bytes_sent = sendto(sock, buf, len, 0, (struct sockaddr *)&myaddr, sizeof(myaddr));
+  int bytes_sent = sendto(sock, buf, len, 0,
+                          (struct sockaddr *)&dest,
+                          sizeof(struct sockaddr_in));
   if (bytes_sent < 0) {
     fprintf(stderr, "Error sending..\n");
   }
 }
 
-void send_error_udp(dns_header *dh, dns_question *dq, byte rcode) {
+void send_error_udp(dns_header *dh, dns_question *dq, byte rcode, struct sockaddr_in *dest) {
   printf("sending error udp: %d\n", (int)rcode);
   dns_edit_header(dh, IS_ERROR, rcode);
 
   int buflen;
   char *buf = dns_make_buf(dh, dq, NULL, &buflen);
 
-  send_udp(buf, buflen);
+  send_udp(buf, buflen, dest);
 
   free(buf);
 }
 
-void send_valid_udp(dns_header *dh, dns_question *dq, char *name) {
+void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockaddr_in *dest) {
   char *ip;
   int server_ip;
 
@@ -124,7 +126,7 @@ void process_udp() {
 
   if (ntohs(dh.qdcount) != 1) {
     fprintf(stderr, "More than 1 query!\n");
-    send_error_udp(&dh, NULL, R_FORMAT);
+    send_error_udp(&dh, NULL, R_FORMAT, &from);
     return;
   }
 
@@ -134,14 +136,14 @@ void process_udp() {
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(&dq);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
-      send_valid_udp(&dh, &dq, name);
+      send_valid_udp(&dh, &dq, name, &from);
     } else {
       printf("bad name: %s\n", name);
-      send_error_udp(&dh, &dq, R_NAME);
+      send_error_udp(&dh, &dq, R_NAME, &from);
     }
     free(name);
   } else {
-    send_error_udp(&dh, &dq, R_FORMAT);
+    send_error_udp(&dh, &dq, R_FORMAT, &from);
   }
 }
 
