@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 #include "dns_utils.h"
 #include "roundrobin.h"
 #include "log.h"
@@ -29,6 +30,14 @@ node_list *graph;
 /* Socket Global variables */
 int sock;
 struct sockaddr_in myaddr;
+
+void myprintf(const char *format, ... ) {
+  va_list list;
+  va_start(list, format);
+  fprintf(stdout, format, list);
+  fflush(stdout);
+  va_end(list);
+}
 
 int read_inputs(int argc, char **argv) {
   int idx = 0;
@@ -55,7 +64,7 @@ void cleanup() {
 }
 
 void send_udp(char *buf, int len, struct sockaddr_in *dest) {
-  printf("udp sending %d bytes\n", len);
+  myprintf("udp sending %d bytes\n", len);
   int bytes_sent = sendto(sock, buf, len, 0,
                           (struct sockaddr *)dest,
                           sizeof(struct sockaddr_in));
@@ -65,7 +74,7 @@ void send_udp(char *buf, int len, struct sockaddr_in *dest) {
 }
 
 void send_error_udp(dns_header *dh, dns_question *dq, byte rcode, struct sockaddr_in *dest) {
-  printf("sending error udp: %d\n", (int)rcode);
+  myprintf("sending error udp: %d\n", (int)rcode);
   dns_edit_header(dh, IS_ERROR, rcode);
 
   int buflen;
@@ -83,16 +92,16 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
   char source[INET_ADDRSTRLEN];
   inet_ntop(AF_INET, &(dest->sin_addr), source, INET_ADDRSTRLEN);
 
-  printf("sending valid udp\n");
+  myprintf("sending valid udp\n");
   if (roundrobin) {
     ip = rr_next_server();
   } else {
-    printf("Finding closest to '%s'\n", source);
-    printf("servers = %p\n", servers);
-    printf("servers->ip = '%s'\n", servers->ip);
+    myprintf("Finding closest to '%s'\n", source);
+    /*printf("servers = %p\n", servers);
+    printf("servers->ip = '%s'\n", servers->ip);*/
     node_list *result = closest_server(graph, source, servers);
     ip = result->ip;
-    printf("Result: '%s'\n", ip);
+    myprintf("Result: '%s'\n", ip);
     // LSA
   }
 
@@ -122,7 +131,7 @@ void process_udp() {
   socklen_t fromlen = sizeof(from);
   char buf[MAX_UDP_BUF];
 
-  printf("processing udp\n");
+  myprintf("processing udp\n");
   short bytes_read = recvfrom(sock, buf, MAX_UDP_BUF, 0, (struct sockaddr *) &from, &fromlen);
 
   if (bytes_read <= 0 ||
@@ -131,7 +140,7 @@ void process_udp() {
     return;
   }
 
-  printf("bytes_read = %d\n", (int)bytes_read);
+  //printf("bytes_read = %d\n", (int)bytes_read);
 
   dns_header dh;
   dns_process_header(buf, &dh);
@@ -147,11 +156,11 @@ void process_udp() {
                     bytes_read - sizeof(dns_header), &dq);
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(&dq);
-    printf("name: '%s'\n", name);
+    myprintf("name: '%s'\n", name);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
       send_valid_udp(&dh, &dq, name, &from);
     } else {
-      printf("bad name: %s\n", name);
+      //printf("bad name: %s\n", name);
       send_error_udp(&dh, &dq, R_NAME, &from);
     }
     free(name);

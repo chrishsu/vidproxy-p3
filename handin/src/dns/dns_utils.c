@@ -34,7 +34,7 @@ int dns_process_query(char *b, short len, dns_question *dq) {
 	 sizeof(dns_question) - variance);
 
   //printf("b: %hhd %hhd %hhd %hhd\n", b[0], b[1], b[2], b[3]);
-  printf("Set type to %hd and class to %hd\n", dq->qtype, dq->qclass);
+  //printf("Set type to %hd and class to %hd\n", dq->qtype, dq->qclass);
   return 1;
 }
 
@@ -215,11 +215,11 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
     *buflen += (sizeof(dns_question) - variance) + dq->namelen;
   }
   if (da != NULL) {
-    printf("size = %d\n", (int)(sizeof(dns_answer) - variance));
+    /*printf("size = %d\n", (int)(sizeof(dns_answer) - variance));
     printf("da->namelen = %d\n", (int)da->namelen);
     printf("Adding %ld\n",
 	   (sizeof(dns_answer) - variance) + da->namelen
-	   - sizeof(short) - sizeof(int));
+	   - sizeof(short) - sizeof(int));*/
     *buflen += (sizeof(dns_answer) - variance) + da->namelen
                - sizeof(short) - sizeof(int);
   }

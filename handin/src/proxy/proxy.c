@@ -19,6 +19,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #include "stream.h"
 #include "request.h"
@@ -73,6 +74,14 @@ char manifest_req[100];
 
 stream *ss = NULL;
 bitrate_list *brlist = NULL;
+
+void myprintf(const char *format, ... ) {
+  va_list list;
+  va_start(list, format);
+  fprintf(stdout, format, list);
+  fflush(stdout);
+  va_end(list);
+}
 
 void clean_up() {
   close(sock);
@@ -168,7 +177,7 @@ int add_client() {
 
   freeaddrinfo(fakeinfo);
   freeaddrinfo(servinfo);
-  printf("Added client!\n");
+  myprintf("Added client!\n");
   return 0;
 }
 
@@ -241,7 +250,7 @@ void process_request(int server) {
   int bit_rate, seq, frag;
   if (parse_uri(bufs[server], buflens[server], &bit_rate, &seq, &frag)) {
     int rate = bitrate_list_select(brlist, ss->throughput);
-    printf("Old bitrate: %d\tNew bitrate: %d\n", bit_rate, rate);
+    myprintf("Old bitrate: %d\tNew bitrate: %d\n", bit_rate, rate);
     replace_uri(bufs[server], &buflens[server], rate);
     stream_add_request(ss, request_init(rate, seq, frag));
     expecting_video[complement_sock(server)] = 1;
@@ -347,7 +356,7 @@ int main(int argc, char* argv[])
   // Request the manifest from the server:
   request_manifest();
 
-  printf("Entering select loop!\n");
+  myprintf("Entering select loop!\n");
 
   fd_set readfdscopy, writefdscopy;
   while (1) {
@@ -403,7 +412,7 @@ int main(int argc, char* argv[])
 
       if (requestedmanifest && !gotmanifest && i == manifestsock) {
 	int bytes_read = recv(i, manifest, MANIFEST_MAX, 0);
-	printf("Read %d bytes from the manifest!\n", bytes_read);
+	//printf("Read %d bytes from the manifest!\n", bytes_read);
 	if (bytes_read <= 0) {
 	  if (bytes_read < 0) {
 	    fprintf(stderr, "Error reading from manifest socket %d\n", i);
@@ -413,16 +422,16 @@ int main(int argc, char* argv[])
 	  ///// Is this safe?
 	  gotmanifest = 1;
 	  brlist = parse_xml(manifest, manifestlen);
-	  printf("Got manifest!\n");
+	  myprintf("Got manifest!\n");
 	  //printf("manifest = %s\n", manifest);
 
 	  bitrate_list *bl = brlist;
-	  printf("Bitrates:\t");
+	  myprintf("Bitrates:\t");
 	  while (bl != NULL) {
-	    printf("%d\t", bl->bitrate);
+	    myprintf("%d\t", bl->bitrate);
 	    bl = bl->next;
 	  }
-	  printf("\n\n");
+	  myprintf("\n\n");
 
 	  ss = stream_init(bitrate_list_select(brlist, 0.0));
 	}
@@ -467,7 +476,7 @@ int main(int argc, char* argv[])
 	  fprintf(stderr, "Couldn't send the manifest in one send!\n");
 	  return EXIT_FAILURE;
 	}
-	printf("Sent %d bytes of manifest request!\n", bytes_sent);
+	//printf("Sent %d bytes of manifest request!\n", bytes_sent);
 	buflens[i] = 0;
 	requestedmanifest = 1;
 	continue;
