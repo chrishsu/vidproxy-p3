@@ -53,13 +53,13 @@ void cleanup() {
 }
 
 void send_udp(char *buf, int len) {
-  int bytes_sent = sendto(sock, buf, len, 0, &dest, sizeof(dest));
+  int bytes_sent = sendto(sock, buf, len, 0, &myaddr, sizeof(myaddr));
   if (bytes_sent < 0) {
     fprintf(stderr, "Error sending..\n");
   }
 }
 
-void send_error_udp(dns_header *dh, dns_question *dq) {
+void send_error_udp(dns_header *dh, dns_question *dq, byte rcode) {
   printf("sending error udp\n");
   dns_edit_header(dh, IS_ERROR, rcode);
 
@@ -71,7 +71,7 @@ void send_error_udp(dns_header *dh, dns_question *dq) {
   free(buf);
 }
 
-void send_valid_udp(dns_header *dh, dns_question *dq) {
+void send_valid_udp(dns_header *dh, dns_question *dq, char *name) {
   char *ip;
   int server_ip;
 
@@ -94,7 +94,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq) {
   send_udp(buf, buflen);
 
   char client_ip[INET_ADDRSTRLEN];
-  inet_ntop(AF_INET, &(dest->sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
+  inet_ntop(AF_INET, &(myaddr.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
   log_print(client_ip, name, ip);
 
   free(da);
@@ -122,7 +122,7 @@ void process_udp() {
   dns_process_header(buf, &dh);
 
   if (ntohs(dh.qdcount) != 1) {
-    send_error_udp(R_FORMAT);
+    send_error_udp(&dh, NULL, R_FORMAT);
     return;
   }
 
@@ -132,13 +132,13 @@ void process_udp() {
   if (dns_is_valid(&dh, &dq)) {
     char *name = dns_query_name(&dq);
     if (strcmp("video.cs.cmu.edu", name) == 0) {
-      send_valid_udp(dh, dq);
+      send_valid_udp(&dh, &dq, name);
     } else {
-      send_error_udp(dh, dq, R_NAME);
+      send_error_udp(&dh, &dq, R_NAME);
     }
     free(name);
   } else {
-    send_error_udp(dh, dq, R_FORMAT);
+    send_error_udp(&dh, &dq, R_FORMAT);
   }
 }
 
