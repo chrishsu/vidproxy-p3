@@ -18,11 +18,11 @@ logs:
 
 src_proxy: src/proxy/proxy.o src/proxy/parse_utils.o src/proxy/stream.o src/proxy/request.o src/mydns.o
 
-src_dns: src/dns/nameserver.o src/dns/dns_utils.o src/dns/roundrobin.o
+src_dns: src/dns/nameserver.o src/dns/dns_utils.o src/dns/roundrobin.o src/dns/graph.o src/dns/priority_queue.o
 
 proxy: proxy.o parse_utils.o stream.o request.o proxy_log.o mydns.o dns_utils.o
 
-nameserver: nameserver.o roundrobin.o dns_utils.o dns_log.o
+nameserver: nameserver.o roundrobin.o dns_utils.o dns_log.o graph.o priority_queue.o
 
 clean:
 	rm -f *.o proxy nameserver $(TESTBINS)

@@ -207,6 +207,8 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  log_init(logfile);
+
   if (roundrobin) {
     rr_parse_servers(servers_file);
   } else {

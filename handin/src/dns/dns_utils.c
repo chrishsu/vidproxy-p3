@@ -52,7 +52,7 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
   memcpy((char *)da + variance, b + namelen, delta);
 
   memcpy(&(da->rdata), b + namelen + delta, sizeof(int));
-  
+
   return 1;
 }
 
@@ -93,7 +93,7 @@ int dns_is_valid(dns_header *dh, dns_question *dq) {
     printf("DNS: not query (%d)\n", (int)dh->type);
     //return 0;
   }
-  if ((dh->rcode&R_BITS) != R_OK) {
+  if ((dh->rcode&R_BITS) != R_COK) {
     printf("DNS: not OK (%d)\n", (int)dh->rcode);
     //return 0;
   }
@@ -151,7 +151,7 @@ void dns_edit_question(dns_question *dq) {
   dq->qclass = htons(1);
 }
 
-#define NAME "\x05video\x02cs\x03cmu\x03edu\x00"
+#define NAME "\x05""video\x02""cs\x03""cmu\x03""edu\x00"
 #define NAME_LEN 18
 
 /**
@@ -217,10 +217,10 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
   if (da != NULL) {
     printf("size = %d\n", (int)(sizeof(dns_answer) - variance));
     printf("da->namelen = %d\n", (int)da->namelen);
-    printf("Adding %ld\n", 
-	   (sizeof(dns_answer) - variance) + da->namelen 
+    printf("Adding %ld\n",
+	   (sizeof(dns_answer) - variance) + da->namelen
 	   - sizeof(short) - sizeof(int));
-    *buflen += (sizeof(dns_answer) - variance) + da->namelen 
+    *buflen += (sizeof(dns_answer) - variance) + da->namelen
                - sizeof(short) - sizeof(int);
   }
 
