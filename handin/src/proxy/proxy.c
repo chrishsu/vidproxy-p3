@@ -110,11 +110,19 @@ int add_client() {
   memset(&servhints, 0, sizeof(servhints));
   servhints.ai_family = AF_INET;
   servhints.ai_socktype = SOCK_STREAM;
-  if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
-    fprintf(stderr, "Error getting real server address info!\n");
-    freeaddrinfo(fakeinfo);
-    close(client_sock);
-    return -1;
+  if (strlen(wwwip) == 0) {
+    if (resolve("video.cs.cmu.edu", "8080", NULL, &servinfo)) {
+      fprintf(stderr, "Error getting manifest real server address info!\n");
+      freeaddrinfo(fakeinfo);
+      return -1;
+    }
+  } else {
+    if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
+      fprintf(stderr, "Error getting real server address info!\n");
+      freeaddrinfo(fakeinfo);
+      close(client_sock);
+      return -1;
+    }
   }
 
   // Try the first address returned:
@@ -176,10 +184,18 @@ int request_manifest() {
   memset(&servhints, 0, sizeof(servhints));
   servhints.ai_family = AF_INET;
   servhints.ai_socktype = SOCK_STREAM;
-  if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
-    fprintf(stderr, "Error getting manifest real server address info!\n");
-    freeaddrinfo(fakeinfo);
-     return -1;
+  if (strlen(wwwip) == 0) {
+    if (resolve("video.cs.cmu.edu", "8080", NULL, &servinfo)) {
+      fprintf(stderr, "Error getting manifest real server address info!\n");
+      freeaddrinfo(fakeinfo);
+      return -1;
+    }
+  } else {
+    if (getaddrinfo(wwwip, "8080", &servhints, &servinfo)) {
+      fprintf(stderr, "Error getting manifest real server address info!\n");
+      freeaddrinfo(fakeinfo);
+       return -1;
+    }
   }
 
   // Try the first address returned:
@@ -288,12 +304,17 @@ int main(int argc, char* argv[])
   strcpy(fakeip, argv[4]);
   strcpy(dnsip, argv[5]);
   sscanf(argv[6], "%d", &dnsport);
-  if (argc > 7)
+  if (argc > 7) {
     strcpy(wwwip, argv[7]);
+  }
+  else {
+    strcpy(wwwip, "");
+  }
 
   sprintf(manifest_req, "GET /vod/big_buck_bunny.f4m HTTP/1.1\r\nHost: localhost:%d\r\n\r\n", listen_port);
 
   log_init(logfile);
+  init_mydns(dnsip, dnsport, fakeip);
 
   FD_ZERO(&readfds);
   FD_ZERO(&writefds);
