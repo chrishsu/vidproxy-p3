@@ -11,6 +11,7 @@
 #include "dns_utils.h"
 #include "roundrobin.h"
 #include "log.h"
+#include "graph.h"
 
 #define MAX_FILENAME 128
 #define MAX_UDP_BUF 512
@@ -23,6 +24,7 @@ char listen_ip[INET_ADDRSTRLEN];
 int listen_port;
 char servers_file[MAX_FILENAME];
 char lsas_file[MAX_FILENAME];
+node_list *graph;
 
 /* Socket Global variables */
 int sock;
@@ -82,6 +84,13 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
   if (roundrobin) {
     ip = rr_next_server();
   } else {
+    char source[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(dest->sin_addr), source, INET_ADDRSTRLEN);
+    printf("Finding closest to '%s'\n", source);
+
+    node_list *result = closest_server(graph, source, servers);
+    ip = result->ip;
+    printf("Result: '%s'\n", ip);
     // LSA
   }
 
@@ -201,6 +210,7 @@ int main(int argc, char **argv) {
   if (roundrobin) {
     rr_parse_servers(servers_file);
   } else {
+    graph = parse_file(lsas_file);
     // LSA
   }
 
