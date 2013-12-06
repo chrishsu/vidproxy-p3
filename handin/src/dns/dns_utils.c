@@ -129,6 +129,7 @@ dns_header *dns_create_header(short qr, byte rcode) {
 }
 
 void dns_edit_question(dns_question *dq) {
+  if (dq == NULL) return;
   dq->qtype = 0;
   dq->qclass = 0;
 }

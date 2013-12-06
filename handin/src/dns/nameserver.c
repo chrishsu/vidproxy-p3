@@ -60,7 +60,7 @@ void send_udp(char *buf, int len) {
 }
 
 void send_error_udp(dns_header *dh, dns_question *dq, byte rcode) {
-  printf("sending error udp\n");
+  printf("sending error udp: %d\n", (int)rcode);
   dns_edit_header(dh, IS_ERROR, rcode);
 
   int buflen;
@@ -122,6 +122,7 @@ void process_udp() {
   dns_process_header(buf, &dh);
 
   if (ntohs(dh.qdcount) != 1) {
+    fprintf(stderr, "More than 1 query!\n");
     send_error_udp(&dh, NULL, R_FORMAT);
     return;
   }
@@ -134,6 +135,7 @@ void process_udp() {
     if (strcmp("video.cs.cmu.edu", name) == 0) {
       send_valid_udp(&dh, &dq, name);
     } else {
+      printf("bad name: %s\n", name);
       send_error_udp(&dh, &dq, R_NAME);
     }
     free(name);
