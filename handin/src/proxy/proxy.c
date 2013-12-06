@@ -24,6 +24,7 @@
 #include "request.h"
 #include "log.h"
 #include "parse_utils.h"
+#include "../mydns.h"
 
 #define MAX_FDS 1023 ///// Is this okay?
 #define MAX_REQ_SIZE 8192
