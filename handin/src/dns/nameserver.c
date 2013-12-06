@@ -53,6 +53,7 @@ void cleanup() {
 }
 
 void send_udp(char *buf, int len) {
+  printf("udp sending %d bytes\n", len);
   int bytes_sent = sendto(sock, buf, len, 0, (struct sockaddr *)&myaddr, sizeof(myaddr));
   if (bytes_sent < 0) {
     fprintf(stderr, "Error sending..\n");

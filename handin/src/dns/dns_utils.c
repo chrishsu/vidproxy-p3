@@ -81,16 +81,16 @@ char *dns_query_name(dns_question *dq) {
 int dns_is_valid(dns_header *dh, dns_question *dq) {
   if (dh == NULL || dq == NULL) return 0;
   if (dh->type != DNS_QUERY) {
-    printf("DNS: not query\n");
-    return 0;
+    printf("DNS: not query (%d)\n", (int)dh->type);
+    //return 0;
   }
   if (dh->rcode != R_OK) {
-    printf("DNS: not OK\n");
-    return 0;
+    printf("DNS: not OK (%d)\n", (int)dh->rcode);
+    //return 0;
   }
   if (ntohs(dh->qdcount) != 1 && ntohs(dh->ancount) != 0) {
-    printf("DNS: not only 1 question, no answer\n");
-    return 0;
+    printf("DNS: not only 1 question and no answer\n");
+    //return 0;
   }
   return 1;
 }
@@ -111,6 +111,10 @@ void dns_edit_header(dns_header *dh, short qr, byte rcode) {
     dh->type = DNS_RESPONSE;
     dh->qdcount = ntohs(1);
     dh->ancount = ntohs(1);
+  }
+  else if (qr == IS_ERROR) {
+    dh->type = DNS_RESPONSE;
+    dh->adcount = ntohs(1);
   }
 }
 
