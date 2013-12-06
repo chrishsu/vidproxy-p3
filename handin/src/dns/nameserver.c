@@ -85,7 +85,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
     // LSA
   }
 
-  inet_pton(AF_INET, ip, &server_ip);
+  inet_pton(AF_INET, ip, &server_ip); // In network byte order.
 
   dns_edit_header(dh, IS_RESPONSE, R_OK);
   dns_edit_question(dq);

@@ -151,7 +151,7 @@ void dns_edit_question(dns_question *dq) {
   dq->qclass = htons(1);
 }
 
-#define NAME "5video2cs3cmu3edu0"
+#define NAME "\x05video\x02cs\x03cmu\x03edu\x00"
 #define NAME_LEN 18
 
 /**
@@ -179,6 +179,8 @@ dns_question *dns_create_question() {
 
 /**
  * Creates a DNS answer.
+ *
+ * @param[in] ip  IP Address expected to be in network byte order.
  */
 dns_answer *dns_create_answer(int ip) {
   dns_answer *da = malloc(sizeof(dns_answer));
@@ -189,7 +191,7 @@ dns_answer *dns_create_answer(int ip) {
   da->aclass = htons(1);
   da->ttl = 0;
   da->rdlength = htons(4);
-  da->rdata = htonl(ip);
+  da->rdata = ip;
 
   return da;
 }
@@ -233,7 +235,7 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
     delta += sizeof(dns_question) - variance;
   }
   if (da != NULL) {
-    memcpy(buf + delta, dq->qname, da->namelen);
+    memcpy(buf + delta, da->aname, da->namelen);
     delta += da->namelen;
     int offset = sizeof(dns_answer) - sizeof(int)- variance
                  - sizeof(short) - sizeof(int);
