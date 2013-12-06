@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "graph.h"
+#include "priority_queue.h"
 
 #define MAXNEIGHBORS 100
 
@@ -10,10 +11,12 @@ node_list *find_node(node_list **nodes, char *node) {
   while (1) {
     if (*nodes == NULL) {
       (*nodes) = malloc(sizeof(node_list));
+      memset((*nodes)->ip, 0, INET_ADDRSTRLEN);
       strncpy((*nodes)->ip, node, INET_ADDRSTRLEN);
       (*nodes)->next = NULL;
       (*nodes)->neighbors = NULL;
       (*nodes)->last_seqnum = -1;
+      (*nodes)->distance = -1;
       return *nodes;
     }
     if (strncmp((*nodes)->ip, node, INET_ADDRSTRLEN) == 0)
@@ -23,6 +26,7 @@ node_list *find_node(node_list **nodes, char *node) {
 }
 
 void remove_neighbor(node_list *node, char *ip) {
+  /*
   printf("Remove neighbor!!\n");
     char copy1[INET_ADDRSTRLEN + 1];
     strncpy(copy1, node->neighbors->ip, INET_ADDRSTRLEN);
@@ -45,57 +49,50 @@ void remove_neighbor(node_list *node, char *ip) {
       cur->next = cur->next->next;
       return;
     }
-  }
+    }*/
 }
 
-void add_neighbor(node_list *node, char *ip) {
-  printf("add neighbor!!\n");
-
+void add_neighbor(node_list *node, node_list *neighbor) {
+  /*
     char copy[INET_ADDRSTRLEN + 1];
     strncpy(copy, ip, INET_ADDRSTRLEN);
     copy[INET_ADDRSTRLEN] = 0;
-    printf("ip = %s\n", copy);
+    printf("ip = %s\n", copy);*/
 
-  node_list *new = malloc(sizeof(node_list));
-  strncpy(new->ip, ip, INET_ADDRSTRLEN);
+  neighbor_list *new = malloc(sizeof(neighbor_list));
+  new->node = neighbor;
   new->next = node->neighbors;
   node->neighbors = new;
 }
 
 void newLSA(node_list **nodes, 
-	    char *senderIP, int seqnum, node_list *neighbors) {
+	    char *senderIP, int seqnum, neighbor_list *neighbors) {
+  printf("newLSA...\n");
+
   node_list *sender = find_node(nodes, senderIP);
   if (sender->last_seqnum >= seqnum)
     return;
   sender->last_seqnum = seqnum;
 
   /* Remove all neighbors: */
-  node_list *cur = sender->neighbors;
+  neighbor_list *cur = sender->neighbors;
   while (cur != NULL) {
-    remove_neighbor(find_node(nodes, cur->ip), senderIP);
-    node_list *next = cur->next;
+    neighbor_list *next = cur->next;
     free(cur);
     cur = next;
   }
 
-  /* Add the new ones from the LSA: */
-  cur = neighbors;
-  while (cur != NULL) {
-    add_neighbor(sender, cur->ip);
-    add_neighbor(find_node(nodes, cur->ip), senderIP);
-    cur = cur->next;
-  }
+  sender->neighbors = neighbors;
 }
 
 /* For print_graph: */
 int index_for_ip(node_list *nodes, char *ip) {
   int index = 0;
   while (nodes != NULL) {
-    printf("going to print...\n");
     char copy[INET_ADDRSTRLEN + 1];
     strncpy(copy, nodes->ip, INET_ADDRSTRLEN);
     copy[INET_ADDRSTRLEN] = 0;
-    printf("nodes->ip = %s, ip = %s\n", copy, ip);
+    //printf("nodes->ip = %s, ip = %s\n", copy, ip);
 
     if (strncmp(nodes->ip, ip, INET_ADDRSTRLEN) == 0)
       return index;
@@ -117,15 +114,16 @@ void print_graph(node_list *graph) {
   int i, j;
   for (i = 0; i < len; i++) {
     adjMat[i] = malloc(len * sizeof(char));
-    memset(adjMat, 0, len);
+    memset(adjMat[i], 0, len);
   }
   cur = graph;
   while (cur != NULL) {
     printf("Looking at %s\n", cur->ip);
     int cur_index = index_for_ip(graph, cur->ip);
-    node_list *cur_neighbor = cur->neighbors;
+    neighbor_list *cur_neighbor = cur->neighbors;
     while (cur_neighbor != NULL) {
-      int neighbor_index = index_for_ip(graph, cur_neighbor->ip);
+      int neighbor_index = index_for_ip(graph, cur_neighbor->node->ip);
+      printf("Setting adjMat[%d][%d]\n", cur_index, neighbor_index);
       adjMat[cur_index][neighbor_index] = 1;
       cur_neighbor = cur_neighbor->next;
     }
@@ -144,7 +142,7 @@ node_list *parse_file(char *LSAfile) {
   node_list *nodes = NULL;
   FILE *f = fopen(LSAfile, "r");
   if (!f) {
-    fprintf(stderr, "Couldn't open LSA file! :(:(\n");
+    fprintf(stderr, "Couldn't open LSA file! :(\n");
     return NULL;
   }
   char sender[INET_ADDRSTRLEN + 1];
@@ -160,19 +158,24 @@ node_list *parse_file(char *LSAfile) {
       break;
     printf("Read something!\n");
 
-    node_list *neighbors = malloc(sizeof(node_list));
+    neighbor_list *neighbors = malloc(sizeof(node_list));
     neighbors->next = NULL;
     char *next = neighbor_str;
     while (1) {
       printf("next = %s\n", next);
       char *comma = strchr(next, ',');
       if (comma == NULL) {
-	strcpy(neighbors->ip, next);
+	neighbors->node = find_node(&nodes, next);
 	break;
       }
-      strncpy(neighbors->ip, next, comma - next);
+      char *ip = malloc(comma - next + 1);
+      strncpy(ip, next, comma - next);
+      ip[comma - next] = 0;
+      neighbors->node = find_node(&nodes, ip);
+      free(ip);
+
       next = comma + 1;
-      node_list *new = malloc(sizeof(node_list));
+      neighbor_list *new = malloc(sizeof(neighbor_list));
       new->next = neighbors;
       neighbors = new;
     }
@@ -203,4 +206,58 @@ node_list *parse_file(char *LSAfile) {
   }
   fclose(f);
   return nodes;
+}
+
+int is_video_server(char *ip) {
+  printf("Is %s a video server? %s!\n", ip, ip[0] <= 'Z' ? "Yes" : "No");
+  return ip[0] <= 'Z';
+}
+
+node_list *closest_server(node_list *graph, char *ip) {
+  // Reset all the Dijkstra flags:
+  node_list *cur = graph;
+  while (cur != NULL) {
+    cur->distance = -1;
+    cur->visited = 0;
+    cur->pq_index = -1;
+    cur = cur->next;
+  }
+
+  node_list *source = find_node(&graph, ip);
+  if (source->neighbors == NULL)
+    printf("No neighbors!\n");
+  source->distance = 0;
+  pq *queue = newPQ();
+  insert(source, queue);
+
+  node_list *next = NULL;
+  while (!empty(queue)) {
+    next = pop(queue);
+    if (next->visited)
+      continue;
+    printf("Visit %s\n", next->ip);
+    next->visited = 1;
+    if (is_video_server(next->ip))
+      break;
+
+    neighbor_list *neighbor = next->neighbors;
+    while (neighbor != NULL) {
+      node_list *cur = neighbor->node;
+      printf("%s is a neighbor\n", cur->ip);
+      if (!cur->visited) {
+	printf("%s is unvisited...\n", cur->ip);
+	if (cur->distance < 0 || 
+	    next->distance + 1 < cur->distance) {
+	  printf("Updating %s\n", cur->ip);
+	  cur->distance = next->distance + 1;
+	  if (cur->pq_index >= 1)
+	    update(cur, queue);
+	  else
+	    insert(cur, queue);
+	}
+      }
+      neighbor = neighbor->next;
+    }
+  }
+  return next;
 }
