@@ -11,14 +11,16 @@
 #define QR_QUERY      0   // 0000 0000
 #define QR_RESPONSE   128 // 1000 0000
 #define AA_QUERY      0   // 0000 0000
-#define AA_RESPONSE   8   // 0000 1000
+#define AA_RESPONSE   4   // 0000 0100
 #define DNS_QUERY     (QR_QUERY & AA_QUERY)
 #define DNS_RESPONSE  (QR_RESPONSE & AA_RESPONSE)
+#define DNS_BITS      252 // 1111 1100
 
 // Response codes
 #define R_OK      0 // No error
 #define R_FORMAT  1 // Bad format
 #define R_NAME    3 // Name not found
+#define R_BITS    15// 0000 1111
 
 #define IS_QUERY     0
 #define IS_RESPONSE  1

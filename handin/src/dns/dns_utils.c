@@ -81,11 +81,11 @@ char *dns_query_name(dns_question *dq) {
  */
 int dns_is_valid(dns_header *dh, dns_question *dq) {
   if (dh == NULL || dq == NULL) return 0;
-  if (dh->type != DNS_QUERY) {
+  if ((dh->type&DNS_BITS) != DNS_QUERY) {
     printf("DNS: not query (%d)\n", (int)dh->type);
     //return 0;
   }
-  if (dh->rcode != R_OK) {
+  if ((dh->rcode&R_BITS) != R_OK) {
     printf("DNS: not OK (%d)\n", (int)dh->rcode);
     //return 0;
   }
