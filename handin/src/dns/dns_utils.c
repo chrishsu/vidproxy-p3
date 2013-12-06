@@ -81,12 +81,15 @@ char *dns_query_name(dns_question *dq) {
 int dns_is_valid(dns_header *dh, dns_question *dq) {
   if (dh == NULL || dq == NULL) return 0;
   if (dh->type != DNS_QUERY) {
+    printf("DNS: not query\n");
     return 0;
   }
   if (dh->rcode != R_OK) {
+    printf("DNS: not OK\n");
     return 0;
   }
   if (ntohs(dh->qdcount) != 1 && ntohs(dh->ancount) != 0) {
+    printf("DNS: not only 1 question, no answer\n");
     return 0;
   }
   return 1;
