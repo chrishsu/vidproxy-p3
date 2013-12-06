@@ -47,8 +47,11 @@ int dns_process_answer(char *b, short len, dns_answer *da) {
   da->aname = malloc(namelen);
   memcpy(da->aname, b + namelen, namelen);
   int variance = sizeof(byte *) + sizeof(int);
-  memcpy((char *)da + variance, b,
-          sizeof(dns_answer) - variance);
+  int delta = sizeof(dns_answer) - variance
+              - sizeof(short) - sizeof(int);
+  memcpy((char *)da + variance, b + namelen, delta);
+  mempcy(da->rdata, b + namelen + delta, sizeof(int));
+  
   return 1;
 }
 
@@ -225,7 +228,11 @@ char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen
   if (da != NULL) {
     memcpy(buf + delta, da->aname, da->namelen);
     delta += da->namelen;
-    memcpy(buf + delta, (char *)da + variance, sizeof(dns_answer) - variance);
+    int offset = sizeof(dns_answer) - variance
+                 - sizeof(short) - sizeof(int);
+    memcpy(buf + delta, (char *)da + variance, offset);
+    delta += offset;
+    memcpy(buf + delta, da->rdata, sizeof(int));
   }
 
   return buf;

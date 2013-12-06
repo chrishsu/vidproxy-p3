@@ -99,7 +99,8 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
   char client_ip[INET_ADDRSTRLEN];
   inet_ntop(AF_INET, &(myaddr.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
   log_print(client_ip, name, ip);
-
+  
+  free(da->aname);
   free(da);
   free(buf);
 }
