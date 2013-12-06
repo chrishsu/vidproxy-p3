@@ -100,9 +100,9 @@ int dns_is_valid(dns_header *dh, dns_question *dq) {
  */
 void dns_edit_header(dns_header *dh, short qr, byte rcode) {
   if (dh == NULL) return;
-  
+
   dh->rcode = rcode;
-  
+
   if (qr == IS_QUERY) {
     dh->type = DNS_QUERY;
     dh->qdcount = ntohs(1);
@@ -114,7 +114,7 @@ void dns_edit_header(dns_header *dh, short qr, byte rcode) {
   }
   else if (qr == IS_ERROR) {
     dh->type = DNS_RESPONSE;
-    dh->adcount = ntohs(1);
+    dh->qdcount = ntohs(1);
   }
 }
 
@@ -129,9 +129,9 @@ dns_header *dns_create_header(short qr, byte rcode) {
   dh->qdcount = 0;
   dh->ancount = 0;
   dh->ignore = 0;
-  
+
   dns_edit_header(dh, qr, rcode);
-  
+
   return dh;
 }
 
@@ -189,7 +189,7 @@ dns_answer *dns_create_answer(int ip) {
  * Also keeps track of the total buffer length.
  *
  * @param[out] buflen  The resulting length of the buffer.
- * 
+ *
  * @return The buffer.
  */
 char *dns_make_buf(dns_header *dh, dns_question *dq, dns_answer *da, int *buflen) {
