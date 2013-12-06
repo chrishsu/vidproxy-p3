@@ -17,7 +17,7 @@
 #define DNS_BITS      252 // 1111 1100
 
 // Response codes
-#define R_OK      0  // No error
+#define R_COK     0  // No error
 #define R_FORMAT  1  // Bad format
 #define R_NAME    3  // Name not found
 #define R_BITS    15 // 0000 1111

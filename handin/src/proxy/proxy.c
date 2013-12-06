@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -19,6 +18,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #include "stream.h"
 #include "request.h"
@@ -272,7 +272,7 @@ void process_data(int client) {
   if (data_left <= 0) { // This data made us go below 0
     stream_request_complete(ss);
     stream_calc_throughput(ss, alpha);
-    
+
     // printf("Got chunk, logging!\n");
     log_print(ss, ip[client]);
   }
@@ -371,19 +371,19 @@ int main(int argc, char* argv[])
 	  FD_SET(i, &readfdscopy);
 	  continue;
 	}
-	
+
 	// Decide if we actually want to read/write from this socket:
-	if (FD_ISSET(i, &readfds) && 
+	if (FD_ISSET(i, &readfds) &&
 	    buflens[complement_sock(i)] == 0) {
 	  FD_SET(i, &readfdscopy);
 	}
-	if (FD_ISSET(i, &writefds) || 
+	if (FD_ISSET(i, &writefds) ||
 	    buflens[i] > 0) { // Write if there's stuff left to write
 	  FD_SET(i, &writefdscopy);
 	}
       }
     }
-      
+
     int select_return = select(MAX_FDS, &readfdscopy, &writefdscopy, &exceptfds, NULL);
     if (select_return < 0) {
       printf("Select error: %d\n", errno);

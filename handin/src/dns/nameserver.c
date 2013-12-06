@@ -96,7 +96,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
 
   inet_pton(AF_INET, ip, &server_ip); // In network byte order.
 
-  dns_edit_header(dh, IS_RESPONSE, R_OK);
+  dns_edit_header(dh, IS_RESPONSE, R_COK);
   dns_edit_question(dq);
   dns_answer *da = dns_create_answer(server_ip);
 
@@ -108,7 +108,7 @@ void send_valid_udp(dns_header *dh, dns_question *dq, char *name, struct sockadd
   char client_ip[INET_ADDRSTRLEN];
   inet_ntop(AF_INET, &(myaddr.sin_addr.s_addr), client_ip, INET_ADDRSTRLEN);
   log_print(client_ip, name, ip);
-  
+
   free(da->aname);
   free(da);
   free(buf);
